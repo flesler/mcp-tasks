@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
 
-// Disable AUTO_WIP for consistent test expectations
-process.env.AUTO_WIP = 'false'
-
 import _ from 'lodash'
 import path from 'path'
 import env from '../src/env'
 import tools from '../src/tools'
 import util from '../src/util'
+
+// Disable AUTO_WIP for consistent test expectations
+env.AUTO_WIP = false
 
 console.log('🧪 Testing tools...')
 
@@ -58,7 +58,7 @@ formats.forEach((format, i) => {
   // 1. Initial setup verification
   assertCounts(sourceId, createExpected(0, 0, 0, 0), 'Initial state')
 
-  // 2. Basic task addition
+  // 2. Basic task addition (AUTO_WIP moves one to In Progress)
   runTool('add', {
     source_id: sourceId,
     texts: [`${format.name} task 1`, `${format.name} task 2`],
@@ -69,6 +69,7 @@ formats.forEach((format, i) => {
   const readResultArray = runTool('search', { source_id: sourceId })
   console.log('Raw search result:', readResultArray)
   const readResult = groupResults(readResultArray)
+
   assert(readResult[env.STATUS_TODO] && readResult[env.STATUS_TODO].length === 2, `Should have 2 tasks in ${env.STATUS_TODO}`)
   assert(readResult[env.STATUS_TODO][0].text === `${format.name} task 1`, 'First task text should match')
 
@@ -248,6 +249,55 @@ formats.forEach((format, i) => {
   console.log(`✅ ${format.name} format test completed successfully!\n`)
 })
 
+// Test markdown parser defaults unrecognized sections to ToDo
+console.log('\n📝 === MARKDOWN PARSER SPECIFIC TEST ===')
+console.log('\n📝 Testing markdown parser defaults unrecognized sections to ToDo...')
+
+const mdTestPath = path.join(process.cwd(), 'tmp/test/md-parser-test.md')
+
+const mdSourceId = setupFile(mdTestPath)
+
+// Write markdown content AFTER setup (setupFile overwrites with empty content)
+util.writeFile(mdTestPath, `# Test Tasks
+
+- [ ] Task before any section
+- [ ] Another task before sections
+
+## Random Section
+- [ ] Task from random section
+
+## Some Other Header  
+- [ ] Task from other header
+
+## To Do
+- [ ] Existing ToDo task
+
+## Done
+- [x] Completed task
+`)
+
+const mdResult = groupResults(tools.search.handler({ source_id: mdSourceId }))
+
+// Check that tasks before sections were moved to ToDo
+const todoTasks = mdResult[env.STATUS_TODO] || []
+const expectedTodoTexts = ['Task before any section', 'Another task before sections', 'Existing ToDo task'].sort()
+const actualTodoTexts = todoTasks.map((t: any) => t.text).sort()
+assert(todoTasks.length === 3, `Expected 3 ToDo tasks (2 from before sections + 1 existing), got ${todoTasks.length}`)
+assert(JSON.stringify(actualTodoTexts) === JSON.stringify(expectedTodoTexts),
+  `ToDo task texts don't match. Expected: ${JSON.stringify(expectedTodoTexts)}, Got: ${JSON.stringify(actualTodoTexts)}`)
+
+// Check that unrecognized sections are preserved as-is
+const randomSectionTasks = mdResult['Random Section'] || []
+assert(randomSectionTasks.length === 1, `Expected 1 Random Section task, got ${randomSectionTasks.length}`)
+assert(randomSectionTasks[0].text === 'Task from random section', 'Random section task text mismatch')
+
+// Done task should remain in Done
+const doneTasks = mdResult[env.STATUS_DONE] || []
+assert(doneTasks.length === 1, `Expected 1 Done task, got ${doneTasks.length}`)
+assert(doneTasks[0].text === 'Completed task', `Expected 'Completed task', got '${doneTasks[0].text}'`)
+
+console.log('✅ Markdown parser correctly defaults unrecognized sections to ToDo!')
+
 // Test sourceId auto-detection with file-based stack
 console.log('\n🎯 Testing sourceId auto-detection...')
 const testFile = path.join(process.cwd(), 'tmp/test/auto-detect.md')
@@ -269,7 +319,7 @@ console.log('\n🚨 === ERROR CONDITION TESTS ===')
 // Test 1: Invalid path for setup (not absolute)
 console.log('\n📍 Testing setup with relative path...')
 try {
-  tools.setup.handler({ path: 'relative/path.md' })
+  tools.setup.handler({ source_path: 'relative/path.md' })
   console.error('❌ Expected error for relative path')
 } catch (error: any) {
   if (error.message.includes('Must be an absolute to a file')) {
@@ -282,7 +332,7 @@ try {
 // Test 2: Invalid path for setup (directory without file extension)
 console.log('\n📍 Testing setup with directory path...')
 try {
-  tools.setup.handler({ path: '/tmp/nonexistent_directory' })
+  tools.setup.handler({ source_path: '/tmp/nonexistent_directory' })
   console.error('❌ Expected error for directory path')
 } catch (error: any) {
   if (error.message.includes('Unsupported file extension')) {
@@ -296,7 +346,7 @@ try {
 console.log('\n📍 Testing setup with path that looks like file but isn\'t...')
 try {
   // Use a path that has extension but is actually a directory
-  tools.setup.handler({ path: '/home.md' })
+  tools.setup.handler({ source_path: '/home.md' })
   console.error('❌ Expected error for path that is not a file')
 } catch (error: any) {
   if (error.message.includes('Must be an absolute to a file')) {
@@ -313,8 +363,8 @@ try {
   tools.summary.handler({ source_id: 'INVALID' })
   console.error('❌ Expected error for invalid source ID')
 } catch (error: any) {
-  if (error.message.includes('Source not found for ID: INVALID')) {
-    console.log('✅ Correctly rejected invalid source ID')
+  if (error.message.includes('Source "INVALID" not found. You must request a file path from the user, make it absolute and call tasks_setup.')) {
+    console.log('✅ Correctly rejected invalid source ID with AI-helpful message')
   } else {
     console.error(`❌ Unexpected error: ${error.message}`)
   }
@@ -412,7 +462,7 @@ console.log('\n🎉 All tests completed successfully!')
 
 function setupFile(absolute: string): string {
   util.writeFile(absolute, '')
-  return JSON.parse(tools.setup.handler({ path: absolute })).sourceId
+  return JSON.parse(tools.setup.handler({ source_path: absolute })).sourceId
 }
 
 function runTool(name: string, args: any = {}) {

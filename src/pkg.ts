@@ -12,4 +12,5 @@ export default {
   name: pkg.name as string,
   version: pkg.version as `${number}.${number}.${number}`,
   description: pkg.description as string,
+  author: pkg.homepage?.split('/')[3] || 'unknown',
 }

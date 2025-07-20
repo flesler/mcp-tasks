@@ -4,7 +4,8 @@ import pkg from './pkg.js'
 import tools from './tools.js'
 
 const server = new FastMCP({
-  name: pkg.name, version: pkg.version,
+  name: `${pkg.author}/${pkg.name}`,
+  version: pkg.version,
 })
 
 // Register all tools & resources

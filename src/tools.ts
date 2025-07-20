@@ -2,6 +2,7 @@ import _ from 'lodash'
 import { z, ZodSchema } from 'zod'
 import env from './env.js'
 import metadata from './metadata.js'
+import pkg from './pkg.js'
 import schemas from './schemas.js'
 import sources from './sources.js'
 import storage from './storage.js'
@@ -20,13 +21,19 @@ const DELETED = 'Deleted'
 const tools = {
   setup: defineTool({
     schema: z.object({
-      path: z.string().min(1, `Path to a file, must be absolute (${storage.supportedExtensions().join(', ')})`),
+      source_path: schemas.sourcePath,
     }),
-    description: 'Initializes a source from a file path. It must be absolute. Creates file if it does not exist. Returns the source ID for further use',
+    description: util.trimLines(`
+      Initializes an ${pkg.name} source from a file path
+      - Always call once per conversation when asked to use these tools
+      - Ask the user to clarify the file path if not given, before calling this tool
+      - Creates the file if it does not exist
+      - Returns the source ID for further use
+    `),
     handler: (args) => {
-      storage.getParser(args.path)
+      storage.getParser(args.source_path)
       // Register the source and get ID
-      const { id } = sources.register(args.path)
+      const { id } = sources.register(args.source_path)
       return getSummary(id)
     },
   }),

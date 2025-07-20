@@ -55,9 +55,13 @@ const util = {
   },
 
   /** Checks if a search is included in a string, case insensitive */
-  fuzzySearch(str: string | undefined | null, search: string | undefined | null): boolean {
-    return _.includes(_.toLower(str || ''), _.toLower(search || ''))
+  fuzzySearch(str: string, search: string): boolean {
+    return util.canonical(str).includes(util.canonical(search))
   },
+
+  canonical: _.memoize((str: string): string => {
+    return str.toLowerCase().replace(/\W+/g, ' ').trim()
+  }),
 
   trimLines(str: string): string {
     return str.replace(/^ +/gm, '').trim()

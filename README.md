@@ -53,9 +53,9 @@ A comprehensive **Model Context Protocol (MCP) server** for task management that
 
 ## 🤖 **AI Integration Tips**
 
-To encourage the AI to use these tools, you can start with a prompt like:
+To encourage the AI to use these tools, you can start with a prompt like the following, with any path you want with .md (recommended), .json, .yml:
 
-"Use mcp-tasks tools to track our work"
+"Use mcp-tasks tools to track our work in path/to/tasks.md"
 
 ## 🔧 **Installation Examples**
 
@@ -135,13 +135,17 @@ To encourage the AI to use these tools, you can start with a prompt like:
 
 **Format is auto-detected from file extension.** All formats support the same features and can be mixed in the same project.
 
+**Recommended**: Markdown (`.md`) for human readability and editing
+
+**⚠️ Warning**: Start with a new file rather than using pre-existing task files to avoid losing non-task content.
+
 ## 🛠️ **Available Tools**
 
 When `PREFIX_TOOLS=true` (default), all tools are prefixed with `tasks_`:
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `tasks_setup` | Initialize a task file (creates if missing, supports `.md`, `.json`, `.yml`) | `path` (absolute file path) |
+| `tasks_setup` | Initialize a task file (creates if missing, supports `.md`, `.json`, `.yml`) | `source_path` (absolute file path) |
 | `tasks_search` | Search tasks with filtering | `source_id`, `statuses?`, `terms?`, `ids?` |
 | `tasks_add` | Add new tasks to a status | `source_id`, `texts[]`, `status`, `index?` |
 | `tasks_update` | Update tasks by ID | `source_id`, `ids[]`, `status`, `index?` |
@@ -155,9 +159,9 @@ When `PREFIX_TOOLS=true` (default), all tools are prefixed with `tasks_`:
 ```javascript
 // Markdown format (human-readable)
 tasks_setup({
-  path: "/absolute/path/to/tasks.md"
-  // path: "/absolute/path/to/tasks.json"
-  // path: "/absolute/path/to/tasks.yml"
+  source_path: "/absolute/path/to/tasks.md"
+  // source_path: "/absolute/path/to/tasks.json"
+  // source_path: "/absolute/path/to/tasks.yml"
 })
 // Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":0,"In Progress":0,"Done":0,"wip":[]}
 
@@ -330,6 +334,18 @@ npm run build           # Compile TypeScript
 npm run lint            # Check code style
 npm run lint:full       # Build + lint
 ```
+
+## 🛠️ **Troubleshooting**
+
+### **Requirements**
+- **Node.js ≥20** - This package requires Node.js version 20 or higher
+
+### **Common Issues**
+
+**Lost content in Markdown files:**
+- ⚠️ The tools will rewrite the entire file, preserving only tasks under recognized status sections
+- Non-task content (notes, documentation) may be lost when tools modify the file
+- Use a dedicated task file rather than mixing tasks with other content
 
 ## 🤝 **Contributing**
 

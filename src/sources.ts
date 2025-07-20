@@ -29,7 +29,11 @@ const sources = {
     const srcs = paths.map(sources.fromPath)
     const src = id ? srcs.find(src => src.id === id) : srcs[0]
     if (!src) {
-      throw new Error(`Source not found for ID: ${id || '<none>'}`)
+      let msg = 'You must request a file path from the user, make it absolute and call tasks_setup.'
+      if (id) {
+        msg = `Source "${id}" not found. ${msg}`
+      }
+      throw new Error(msg)
     }
     return src
   },

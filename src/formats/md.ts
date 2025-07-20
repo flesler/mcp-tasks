@@ -4,16 +4,23 @@ import env from '../env.js'
 import { FormatParser, State } from '../types.js'
 import util from '../util.js'
 
+const PREFIX = '## '
+const FALLBACK_PREFIX = '# '
+
 const md: FormatParser = {
   read(path) {
     const content = util.readFile(path)
     const lines = content.split('\n')
     const state: State = { groups: {} }
+    let prefix = PREFIX
+    if (!content.includes(prefix) && content.split(FALLBACK_PREFIX).length > 1) {
+      prefix = FALLBACK_PREFIX
+    }
 
-    let currentGroup = ''
+    let currentGroup = env.STATUS_TODO
     for (const line of lines.map(line => line.trim())) {
-      if (line.startsWith('## ')) {
-        const group = line.substring(3).trim()
+      if (line.startsWith(prefix)) {
+        const group = line.substring(prefix.length).trim()
         if (group) {
           currentGroup = group
         }

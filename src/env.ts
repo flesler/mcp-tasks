@@ -9,7 +9,7 @@ const env = {
   STATUSES: readStrings('STATUSES', 'Backlog'),
   AUTO_WIP: readBoolean('AUTO_WIP', true),
   INSTRUCTIONS: readString('INSTRUCTIONS', ''),
-} as const
+}
 
 // Augment if not explicitly set
 if (!env.STATUSES.includes(env.STATUS_TODO)) {
