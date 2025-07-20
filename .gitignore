@@ -1,0 +1,29 @@
+.cursor/local
+.cursor/rules
+tmp/
+.eslintcache
+bin/test.ts
+sources.json
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs
+*.log 

@@ -1,0 +1,76 @@
+{
+  "name": "mcp-tasks",
+  "version": "0.9.0",
+  "type": "module",
+  "description": "A comprehensive MCP server for task management with multi-format support (Markdown, JSON, YAML)",
+  "main": "dist/index.js",
+  "bin": {
+    "mcp-tasks": "dist/index.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "npx rimraf dist/*",
+    "start": "node dist/index.js",
+    "start:http": "TRANSPORT=http node dist/index.js",
+    "dev": "npm run ts -- src/index.ts",
+    "dev:http": "TRANSPORT=http npm run dev",
+    "inspect": "npx fastmcp inspect src/index.ts",
+    "ts": "tsx",
+    "eslint": "eslint --cache",
+    "lint": "npm run eslint -- src/**/*.ts",
+    "lint:fix": "npm run lint -- --fix",
+    "lint:full": "npm run build && npm run lint",
+    "prepublishOnly": "npm run lint:full",
+    "prepack": "npm run build",
+    "publish:dry": "npm pack --dry-run --loglevel=info",
+    "publish": "npm publish",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major"
+  },
+  "keywords": [
+    "mcp",
+    "task",
+    "management",
+    "llm",
+    "model-context-protocol",
+    "ai",
+    "claude",
+    "cursor",
+    "todo",
+    "productivity"
+  ],
+  "author": "Ariel Flesler <aflesler@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flesler/mcp-tasks.git"
+  },
+  "homepage": "https://github.com/flesler/mcp-tasks#readme",
+  "bugs": {
+    "url": "https://github.com/flesler/mcp-tasks/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "fastmcp": "^3.9.0",
+    "lodash": "^4.17.21",
+    "yaml": "^2.8.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.0",
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "mcp-tasks-local": {
+      "url": "http://localhost:4680/mcp"
+    }
+  }
+} 

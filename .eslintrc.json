@@ -1,0 +1,34 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": ["./tsconfig.json", "./bin/tsconfig.json"],
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "warnOnUnsupportedTypeScriptVersion": false
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "env": {
+    "node": true,
+    "es2022": true
+  },
+  "settings": {
+    "react": {
+      "version": "999.999.999"
+    }
+  },
+  "rules": {
+    "semi": ["error", "never"],
+    "@typescript-eslint/semi": ["error", "never"],
+    "quotes": ["error", "single"],
+    "indent": ["error", 2],
+    "no-trailing-spaces": "error",
+    "eol-last": "error",
+    "comma-dangle": ["error", "always-multiline"],
+    "object-curly-spacing": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "no-console": "off"
+  }
+} 
