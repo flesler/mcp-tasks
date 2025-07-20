@@ -32,9 +32,11 @@ const tools = {
       - ${pkg.name} is at version ${pkg.version}
     `),
     handler: (args) => {
-      storage.getParser(args.source_path)
+      // Until verified if we need backwards compatibility in schema
+      const path = args.source_path || (args as any).path
+      storage.getParser(path)
       // Register the source and get ID
-      const { id } = sources.register(args.source_path)
+      const { id } = sources.register(path)
       return getSummary(id)
     },
   }),
