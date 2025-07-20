@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/mcp-tasks.svg)](https://www.npmjs.com/package/mcp-tasks)
 [![Node.js](https://img.shields.io/node/v/mcp-tasks.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/docker/v/flesler/mcp-tasks?label=docker)](https://hub.docker.com/r/flesler/mcp-tasks)
 
 A comprehensive **Model Context Protocol (MCP) server** for task management that works seamlessly with Claude, Cursor, and other MCP clients. Supports multiple file formats (Markdown, JSON, YAML) with powerful search, filtering, and organization capabilities.
 
