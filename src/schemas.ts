@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import env from './env.js'
-import storage from './storage'
+import storage from './storage.js'
 import util from './util.js'
 
 export default {

@@ -1,9 +1,13 @@
 #!/usr/bin/env node
+import pkg from './pkg.js'
+
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
-  console.log(`MCP Tasks Server
+  console.log(`${pkg.author}/${pkg.name} ${pkg.version}
+${pkg.description}
+
 Examples:
-  mcp-tasks                    # Run with stdio transport
-  TRANSPORT=http mcp-tasks      # Run with HTTP transport
+  ${pkg.name}                    # Run with stdio transport
+  TRANSPORT=http ${pkg.name}      # Run with HTTP transport
 `)
   process.exit(0)
 }
