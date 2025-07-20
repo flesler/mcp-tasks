@@ -1,6 +1,6 @@
 {
   "name": "mcp-tasks",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "A comprehensive MCP server for task management with multi-format support (Markdown, JSON, YAML)",
   "main": "dist/index.js",
