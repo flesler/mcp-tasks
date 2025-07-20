@@ -24,11 +24,12 @@ const tools = {
       source_path: schemas.sourcePath,
     }),
     description: util.trimLines(`
-      Initializes an ${pkg.name} source from a file path
+      Initializes an source file from a path
       - Always call once per conversation when asked to use these tools
       - Ask the user to clarify the file path if not given, before calling this tool
       - Creates the file if it does not exist
       - Returns the source ID for further use
+      - ${pkg.name} is at version ${pkg.version}
     `),
     handler: (args) => {
       storage.getParser(args.source_path)
