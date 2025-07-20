@@ -50,6 +50,12 @@ A comprehensive **Model Context Protocol (MCP) server** for task management that
 }
 ```
 
+## 🤖 **AI Integration Tips**
+
+To encourage the AI to use these tools, you can start with a prompt like:
+
+"Use mcp-tasks tools to track our work"
+
 ## 🔧 **Installation Examples**
 
 ### Cursor (`~/.cursor/mcp.json`)
