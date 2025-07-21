@@ -97,7 +97,7 @@ const tools = {
       }
       const wip = state.groups[env.STATUS_WIP]
       const todos = state.groups[env.STATUS_TODO]
-      if (args.status === env.STATUS_WIP && env.AUTO_WIP) {
+      if (env.AUTO_WIP && args.status === env.STATUS_WIP) {
         // Move all WIP but the first to ToDo
         todos.unshift(...wip)
         wip.length = 0
@@ -106,7 +106,7 @@ const tools = {
       // Add new tasks at the specified index
       const index = util.clamp(args.index ?? group.length, 0, group.length)
       group.splice(index, 0, ...texts)
-      if (env.AUTO_WIP && !wip.length && todos.length) {
+      if (env.AUTO_WIP && !wip.length && todos[0] && todos[0] !== texts[0]) {
         // Move first ToDo to WIP
         wip.push(todos.shift()!)
       }
@@ -124,6 +124,7 @@ const tools = {
       status: z.union([schemas.status, z.literal(env.STATUS_DELETED)]).describe(util.trimLines(`
         ${schemas.status.description}
         - "${env.STATUS_DELETED}" when they want these removed
+        ${env.AUTO_WIP ? `- Updating tasks to ${env.STATUS_WIP} moves others to ${env.STATUS_TODO}, finishing a ${env.STATUS_WIP} task moves the first ${env.STATUS_DONE} to ${env.STATUS_WIP}` : ''}
       `)),
       index: schemas.index,
     }),
@@ -172,8 +173,8 @@ const tools = {
     isEnabled: env.DEBUG,
     handler: (args, context) => {
       return {
-        ...args, context, env: process.env,
-        version: pkg.version, cwd: util.CWD,
+        ...args, processEnv: process.env, argv: process.argv,
+        env, context, version: pkg.version, cwd: util.CWD,
       }
     },
   }),

@@ -13,7 +13,7 @@ type ToolMapper = {
 const commands: ToolMapper = {
   setup: ([sourcePath, workspace]) => ({ source_path: sourcePath, workspace: workspace || undefined }),
   search: ([statuses = '', terms = '']) => ({ statuses: split(statuses), terms: split(terms) }),
-  add: ([text, status = env.STATUS_TODO]) => ({ texts: [text], status }),
+  add: ([text, status = env.STATUS_TODO, index]) => ({ texts: [text], status, index: index ? Number(index) : undefined }),
   update: ([taskIds, status]) => ({ ids: split(taskIds) || [], status }),
   summary: () => ({}),
   debug: () => ({}),

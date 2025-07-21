@@ -1,5 +1,6 @@
 # MCP Tasks 📋
 
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=mcp-tasks&config=JTdCJTIyY29tbWFuZCUyMiUzQSUyMm5weCUyMC15JTIwbWNwLXRhc2tzJTIyJTdE)
 [![npm version](https://img.shields.io/npm/v/mcp-tasks.svg)](https://www.npmjs.com/package/mcp-tasks)
 [![Node.js](https://img.shields.io/node/v/mcp-tasks.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -9,7 +10,7 @@ A comprehensive and **efficient Model Context Protocol (MCP) server** for task m
 
 ## ✨ **Features**
 
-- ⚡ **Ultra-efficient design**: Minimal tool count (5 tools) to reduce AI confusion  
+- ⚡ **Ultra-efficient design**: Minimal tool count (5 tools) to reduce AI confusion
 - 🎯 **Budget-optimized**: Batch operations, smart defaults and auto-operations minimize LLM API calls
 - 🚀 **Multi-format support**: Markdown (`.md`), JSON (`.json`), and YAML (`.yml`) task files
 - 🔍 **Powerful search**: Case-insensitive text/status filtering with OR logic, and ID-based lookup
@@ -66,6 +67,12 @@ If you are telling it about new or updated tasks, you can append this to the end
 
 ```
 use mcp-tasks
+```
+
+**Adding tasks while AI works:** To safely add tasks without interfering with AI operations, [use the CLI](#-cli-usage) from a separate terminal:
+
+```bash
+npx mcp-tasks add "Your new task text" "To Do" 0
 ```
 
 
@@ -385,6 +392,11 @@ npm run lint:full       # Build + lint
 - **Node.js ≥20** - This package requires Node.js version 20 or higher
 
 ### **Common Issues**
+
+**Where are my tasks stored?**
+- Tasks are stored in the file path you specified by the AI in `tasks_setup`
+- The absolute path is returned in every tool call response under `source.path`
+- If you forgot the location, check any tool response or ask the AI to show it to you
 
 **Lost content in Markdown files:**
 - ⚠️ The tools will rewrite the entire file, preserving only tasks under recognized status sections

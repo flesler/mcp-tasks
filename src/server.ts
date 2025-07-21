@@ -1,5 +1,6 @@
 import { FastMCP } from 'fastmcp'
 import env from './env.js'
+import logger from './logger.js'
 import pkg from './pkg.js'
 import tools from './tools.js'
 
@@ -40,7 +41,7 @@ for (const tool of Object.values(tools)) {
           const result = tool.handler(args as any, context)
           return Promise.resolve(enforceString(result))
         } catch (err) {
-          console.error(err)
+          logger.error(err)
           return Promise.reject(err)
         }
       },
@@ -49,17 +50,19 @@ for (const tool of Object.values(tools)) {
 }
 
 if (env.TRANSPORT === 'http') {
-  server.start({
+  await server.start({
     transportType: 'httpStream',
     httpStream: {
       port: env.PORT,
     },
   })
 } else {
-  server.start({
+  await server.start({
     transportType: 'stdio',
   })
 }
+
+logger.log(`Started new server on ${env.TRANSPORT} mode`)
 
 function enforceString(value: any): string {
   if (typeof value === 'string') {
