@@ -13,7 +13,7 @@ const env = {
   STATUSES: readStrings('STATUSES', 'Backlog'),
   AUTO_WIP: readBoolean('AUTO_WIP', true),
   INSTRUCTIONS: readString('INSTRUCTIONS', `Use ${pkg.name} tools when the user mentions new or updated tasks`),
-  KEEP_DELETED: readBoolean('KEEP_DELETED', false),
+  KEEP_DELETED: readBoolean('KEEP_DELETED', true),
   DEBUG: readBoolean('DEBUG', false),
   SOURCES_PATH: readString('SOURCES_PATH', './sources.json'),
 }

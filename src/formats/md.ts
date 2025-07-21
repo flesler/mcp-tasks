@@ -7,6 +7,9 @@ import util from '../util.js'
 const PREFIX = '## '
 const LINE_REGEX: RegExp = /^ *- *(?:\[.?\])? *(.+) *$/
 
+// TODO: Make this configurable (?)
+const SKIP_IF_EMPTY: string[] = [env.STATUS_DELETED, env.STATUS_NOTES]
+
 const md: FormatParser = {
   read(path) {
     const content = util.readFile(path)
@@ -38,15 +41,16 @@ const md: FormatParser = {
     let content = `# Tasks - ${title}\n\n`
 
     for (const group of util.keysOf(state.groups)) {
-      content += `${PREFIX}${group}\n\n`
       const tasks = state.groups[group] || []
-      if (tasks.length) {
-        for (const task of tasks) {
-          const char = group === env.STATUS_DONE ? 'x' :
-            group === env.STATUS_NOTES ? '' : ' '
-          const block = char ? `[${char}] ` : ''
-          content += `- ${block}${task}\n`
-        }
+      if (!tasks.length && (SKIP_IF_EMPTY.includes(group) || !env.STATUSES.includes(group))) {
+        continue
+      }
+      content += `${PREFIX}${group}\n\n`
+      for (const task of tasks) {
+        const char = group === env.STATUS_DONE ? 'x' :
+          group === env.STATUS_NOTES ? '' : ' '
+        const block = char ? `[${char}] ` : ''
+        content += `- ${block}${task}\n`
       }
       content += '\n'
     }

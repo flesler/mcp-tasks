@@ -21,6 +21,7 @@ A comprehensive and **efficient Model Context Protocol (MCP) server** for task m
 - 🤖 **Auto WIP management**: Automatically manages work-in-progress task limits
 - 🚫 **Duplicate prevention**: Automatically prevents duplicate tasks
 - 🛡️ **Type-safe**: Full TypeScript support with Zod validation
+- 🔒 **Ultra-safe**: AI has no way to rewrite or delete your tasks (unless you enable it), only add and move them
 
 ## 🚀 **Quick Start**
 
@@ -103,9 +104,13 @@ npx mcp-tasks add "Your new task text" "To Do" 0
         "STATUS_WIP": "In Progress",
         "STATUS_TODO": "To Do",
         "STATUS_DONE": "Done",
+        "STATUS_NOTES": "Notes",
         "STATUSES": "In Progress,To Do,Done,Backlog",
         "AUTO_WIP": "true",
         "PREFIX_TOOLS": "true",
+        "KEEP_DELETED": "true",
+        "TRANSPORT": "stdio",
+        "PORT": "4680",
         "INSTRUCTIONS": "Use mcp-tasks tools when the user mentions new or updated tasks"
       }
     }
@@ -238,7 +243,7 @@ tasks_summary({
 | `STATUS_NOTES` | `Notes` | Optional notes/non-actionable status name |
 | `STATUSES` | `Backlog` | Comma-separated additional statuses |
 | `AUTO_WIP` | `true` | One WIP moves rest to To Do, first To Do to WIP when no WIP's |
-| `KEEP_DELETED` | `false` | If true, retain deleted tasks |
+| `KEEP_DELETED` | `true` | Retain deleted tasks (AI can't lose you tasks!) |
 | `INSTRUCTIONS` | `...` | Included in all tool responses, for the AI to follow |
 | `SOURCES_PATH` | `./sources.json` | File to store source registry (internal) |
 | `DEBUG` | `false` | if true, enable the `tasks_debug` tool |
@@ -412,6 +417,7 @@ npm run lint:full       # Build + lint
 - **Edit precision:** Manual editing risks corrupting markdown formatting, losing tasks, or accidentally modifying the wrong sections
 - **Concurrent editing conflicts:** When AI directly edits files, humans can't safely make manual changes without creating conflicts or overwrites
 - **Token inefficiency:** Reading+parsing+editing cycles consume far more tokens than structured tool calls with clear inputs/outputs
+- **Safety:** AI can accidentally change or delete tasks when directly editing files, but with these tools it cannot rewrite or delete your tasks
 
 ## 🤝 **Contributing**
 
