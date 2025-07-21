@@ -19,6 +19,10 @@ const storage = {
     }
     try {
       const state = storage.getParser(path).read(path)
+      if (!env.KEEP_DELETED) {
+        // In case it was switched off after
+        delete state.groups[env.STATUS_DELETED]
+      }
       return { ...empty, groups: { ...empty.groups, ...state.groups } }
     } catch {
       return empty

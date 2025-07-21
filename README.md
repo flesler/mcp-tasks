@@ -5,10 +5,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/docker/v/flesler/mcp-tasks?label=docker)](https://hub.docker.com/r/flesler/mcp-tasks)
 
-A comprehensive **Model Context Protocol (MCP) server** for task management that works seamlessly with Claude, Cursor, and other MCP clients. Supports multiple file formats (Markdown, JSON, YAML) with powerful search, filtering, and organization capabilities.
+A comprehensive and **efficient Model Context Protocol (MCP) server** for task management that works seamlessly with Claude, Cursor, and other MCP clients. Designed to minimize tool confusion and maximize LLM budget efficiency while providing powerful search, filtering, and organization capabilities across multiple file formats.
 
 ## ✨ **Features**
 
+- ⚡ **Ultra-efficient design**: Minimal tool count (5 tools) to reduce AI confusion  
+- 🎯 **Budget-optimized**: Batch operations, smart defaults and auto-operations minimize LLM API calls
 - 🚀 **Multi-format support**: Markdown (`.md`), JSON (`.json`), and YAML (`.yml`) task files
 - 🔍 **Powerful search**: Case-insensitive text/status filtering with OR logic, and ID-based lookup
 - 📊 **Smart organization**: Status-based filtering with customizable workflow states
@@ -16,6 +18,7 @@ A comprehensive **Model Context Protocol (MCP) server** for task management that
 - 📁 **Multi-source support**: Manage multiple task files simultaneously
 - 🔄 **Real-time updates**: Changes persist automatically to your chosen format
 - 🤖 **Auto WIP management**: Automatically manages work-in-progress task limits
+- 🚫 **Duplicate prevention**: Automatically prevents duplicate tasks
 - 🛡️ **Type-safe**: Full TypeScript support with Zod validation
 
 ## 🚀 **Quick Start**
@@ -55,7 +58,16 @@ A comprehensive **Model Context Protocol (MCP) server** for task management that
 
 To encourage the AI to use these tools, you can start with a prompt like the following, with any path you want with .md (recommended), .json, .yml:
 
-"Use mcp-tasks tools to track our work in path/to/tasks.md"
+```
+Use mcp-tasks tools to track our work in path/to/tasks.md
+```
+
+If you are telling it about new or updated tasks, you can append this to the end of your prompt:
+
+```
+use mcp-tasks
+```
+
 
 ## 🔧 **Installation Examples**
 
@@ -87,8 +99,7 @@ To encourage the AI to use these tools, you can start with a prompt like the fol
         "STATUSES": "In Progress,To Do,Done,Backlog",
         "AUTO_WIP": "true",
         "PREFIX_TOOLS": "true",
-        "INSTRUCTIONS": "When I mention new things to do, automatically call the tasks_add tool to record them, task_update when we complete them",
-        "SOURCES_PATH": "./tasks-sources.json"
+        "INSTRUCTIONS": "Use mcp-tasks tools when the user mentions new or updated tasks"
       }
     }
   }
@@ -145,7 +156,7 @@ When `PREFIX_TOOLS=true` (default), all tools are prefixed with `tasks_`:
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `tasks_setup` | Initialize a task file (creates if missing, supports `.md`, `.json`, `.yml`) | `source_path` (absolute file path) |
+| `tasks_setup` | Initialize a task file (creates if missing, supports `.md`, `.json`, `.yml`) | `source_path`, `workspace?` |
 | `tasks_search` | Search tasks with filtering | `source_id`, `statuses?`, `terms?`, `ids?` |
 | `tasks_add` | Add new tasks to a status | `source_id`, `texts[]`, `status`, `index?` |
 | `tasks_update` | Update tasks by ID | `source_id`, `ids[]`, `status`, `index?` |
@@ -157,14 +168,13 @@ When `PREFIX_TOOLS=true` (default), all tools are prefixed with `tasks_`:
 
 **Setup a task file:**
 ```javascript
-// Markdown format (human-readable)
 tasks_setup({
-  source_path: "/absolute/path/to/tasks.md"
-  // source_path: "/absolute/path/to/tasks.json"
-  // source_path: "/absolute/path/to/tasks.yml"
+  workspace: "/path/to/project",
+  source_path: "tasks.md"  // relative to workspace or absolute
+  // source_path: "tasks.json"
+  // source_path: "tasks.yml"
 })
-// Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":0,"In Progress":0,"Done":0,"wip":[]}
-
+// Returns: {"source":{"id":"xK8p","path":"/path/to/project/tasks.md"},"Backlog":0,"To Do":0,"In Progress":0,"Done":0,"inProgress":[]}
 // Source ID (4-char alphanumeric) is used for all subsequent operations
 ```
 
@@ -176,7 +186,7 @@ tasks_add({
   status: "To Do",
   index: 0  // Add at top (optional)
 })
-// Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":2,"In Progress":0,"Done":0,"wip":[],"tasks":[{"id":"m3Qw","text":"Implement authentication","status":"To Do","index":0},{"id":"p9Lx","text":"Write tests","status":"To Do","index":1}]}
+// Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":2,"In Progress":0,"Done":0,"inProgress":[],"tasks":[{"id":"m3Qw","text":"Implement authentication","status":"To Do","index":0},{"id":"p9Lx","text":"Write tests","status":"To Do","index":1}]}
 ```
 
 **Search and filter:**
@@ -197,7 +207,7 @@ tasks_update({
   ids: ["m3Qw", "p9Lx"],    // Task IDs from add/search responses
   status: "Done"            // Use "Deleted" to remove
 })
-// Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":0,"In Progress":0,"Done":2,"wip":[],"tasks":[{"id":"m3Qw","text":"Implement authentication","status":"Done","index":0},{"id":"p9Lx","text":"Write tests","status":"Done","index":1}]}
+// Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":0,"In Progress":0,"Done":2,"inProgress":[],"tasks":[{"id":"m3Qw","text":"Implement authentication","status":"Done","index":0},{"id":"p9Lx","text":"Write tests","status":"Done","index":1}]}
 ```
 
 **Get overview:**
@@ -205,7 +215,7 @@ tasks_update({
 tasks_summary({
   source_id: "xK8p"         // From setup response
 })
-// Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":0,"In Progress":1,"Done":2,"wip":[{"id":"r7Km","text":"Fix critical bug","status":"In Progress","index":0}]}
+// Returns: {"source":{"id":"xK8p","path":"/absolute/path/to/tasks.md"},"Backlog":0,"To Do":0,"In Progress":1,"Done":2,"inProgress":[{"id":"r7Km","text":"Fix critical bug","status":"In Progress","index":0}]}
 ```
 
 ## 🎛️ **Environment Variables**
@@ -218,22 +228,25 @@ tasks_summary({
 | `STATUS_WIP` | `In Progress` | Work-in-progress status name |
 | `STATUS_TODO` | `To Do` | ToDo status name |
 | `STATUS_DONE` | `Done` | Completed status name |
+| `STATUS_NOTES` | `Notes` | Optional notes/non-actionable status name |
 | `STATUSES` | `Backlog` | Comma-separated additional statuses |
 | `AUTO_WIP` | `true` | One WIP moves rest to To Do, first To Do to WIP when no WIP's |
-| `INSTRUCTIONS` | `""` | Included in all tool responses, for the AI to follow |
+| `KEEP_DELETED` | `false` | If true, retain deleted tasks |
+| `INSTRUCTIONS` | `...` | Included in all tool responses, for the AI to follow |
 | `SOURCES_PATH` | `./sources.json` | File to store source registry (internal) |
+| `DEBUG` | `false` | if true, enable the `tasks_debug` tool |
 
 ### Advanced Configuration Examples
 
 Optional, the WIP/ToDo/Done statuses can be included to control their order.
 
-**Custom workflow states:**
+**Custom workflow statuses:**
 ```json
 {
   "env": {
-    "STATUSES": "WIP,ToDo,Archived,Done",
+    "STATUSES": "WIP,Pending,Archived,Done,To Review",
     "STATUS_WIP": "WIP",
-    "STATUS_TODO": "ToDo",
+    "STATUS_TODO": "Pending",
     "AUTO_WIP": "false"
   }
 }
@@ -317,6 +330,37 @@ TRANSPORT=http PORT=8080 mcp-tasks
 STATUS_WIP="Working" AUTO_WIP=false mcp-tasks
 ```
 
+## 💻 **CLI Usage**
+
+You can also use `mcp-tasks` as a command-line tool for quick task management:
+
+```bash
+# Setup a task file
+mcp-tasks setup path/to/tasks.md $PWD
+
+# Add tasks
+mcp-tasks add "Implement authentication"           # Defaults to "To Do" status
+mcp-tasks add "Write tests" "Backlog"              # Add with specific status
+
+# Search tasks
+mcp-tasks search                              # All tasks
+mcp-tasks search "" "auth,login"              # Search for specific terms
+mcp-tasks search "To Do,Done" ""              # Filter by statuses
+mcp-tasks search "In Progress" "bug"          # Filter by status and search terms
+
+# Update task status (comma-separated IDs)
+mcp-tasks update m3Qw,p9Lx Done
+
+# Get summary
+mcp-tasks summary
+```
+
+**CLI Features:**
+- Direct access to all MCP tool functionality
+- JSON output for easy parsing and scripting
+- Same reliability and duplicate prevention as MCP tools
+- Perfect for automation scripts and CI/CD pipelines
+
 ## 🧪 **Development**
 
 ```bash
@@ -346,6 +390,16 @@ npm run lint:full       # Build + lint
 - ⚠️ The tools will rewrite the entire file, preserving only tasks under recognized status sections
 - Non-task content (notes, documentation) may be lost when tools modify the file
 - Use a dedicated task file rather than mixing tasks with other content
+
+## Why not just have AI edit the task files directly?
+
+- **File parsing complexity:** AI must read entire files, parse markdown structure, and understand current state - expensive and error-prone
+- **Multi-step operations:** Moving a task from "In Progress" to "Done" requires multiple `read_file`, `grep_search`, `sed` calls to locate and modify correct sections
+- **Context loss:** Large task files forcing AI to work with incomplete chunks due to token restrictions and lose track of overall structure
+- **State comprehension:** AI struggles to understand true project state when reading fragmented file sections - which tasks are actually in progress?
+- **Edit precision:** Manual editing risks corrupting markdown formatting, losing tasks, or accidentally modifying the wrong sections
+- **Concurrent editing conflicts:** When AI directly edits files, humans can't safely make manual changes without creating conflicts or overwrites
+- **Token inefficiency:** Reading+parsing+editing cycles consume far more tokens than structured tool calls with clear inputs/outputs
 
 ## 🤝 **Contributing**
 

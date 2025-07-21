@@ -6,13 +6,14 @@ import util from './util.js'
 export default {
   sourcePath: z.string().min(1, util.trimLines(`
     Path to a file (one of ${storage.supportedExtensions().join(', ')}).
-    - Must be absolute
+    - It can be relative if you provide a workspace/project path
+    - Otherwise it must be absolute!
     - Never invent or guess one! Ask the user for it
   `)),
 
   sourceId: z.string().min(1).optional().describe(util.trimLines(`
     Source ID from task_setup() response
-    - Defaults to most recent (across projects) if not provided
+    - Defaults to most recent in the workspace if not provided
     - Try to always provide it!
     - If you don't have it, ask the user for a file path and call task_setup()
   `)),
@@ -21,6 +22,7 @@ export default {
     You might need to infer it from the context. e.g.:
     - "${env.STATUS_TODO}" when they say "Do this next"
     - "${env.STATUS_WIP}" when they say "First do this"
+    ${env.STATUS_NOTES ? `- "${env.STATUS_NOTES}" to collect non-actionable notes` : ''}
   `)),
 
   ids: z.array(z.string()).describe('The IDs of existing tasks'),

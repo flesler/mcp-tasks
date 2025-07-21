@@ -2,9 +2,9 @@
 
 import _ from 'lodash'
 import path from 'path'
-import env from '../src/env'
-import tools from '../src/tools'
-import util from '../src/util'
+import env from '../src/env.js'
+import tools from '../src/tools.js'
+import util from '../src/util.js'
 
 // Disable AUTO_WIP for consistent test expectations
 env.AUTO_WIP = false
@@ -146,7 +146,7 @@ formats.forEach((format, i) => {
     ids: [testTask.id],
     status: BACKLOG,
   })
-  assertCounts(sourceId, createExpected(2, 2, 4, 0), 'After ToDo -> Backlog')
+  assertCounts(sourceId, createExpected(2, 2, 4, 0), 'After To Do -> Backlog')
 
   // 10. Move task from Done to Backlog
   const doneTask = groupResults(runTool('search', { source_id: sourceId, statuses: [env.STATUS_DONE] }))[env.STATUS_DONE][0]
@@ -157,14 +157,14 @@ formats.forEach((format, i) => {
   })
   assertCounts(sourceId, createExpected(2, 1, 5, 0), 'After Done -> Backlog')
 
-  // 11. Move task from Backlog to ToDo
+  // 11. Move task from Backlog to To Do
   const backlogTask = groupResults(runTool('search', { source_id: sourceId, statuses: [BACKLOG] }))[BACKLOG][0]
   runTool('update', {
     source_id: sourceId,
     ids: [backlogTask.id],
     status: env.STATUS_TODO,
   })
-  assertCounts(sourceId, createExpected(3, 1, 4, 0), 'After Backlog -> ToDo')
+  assertCounts(sourceId, createExpected(3, 1, 4, 0), 'After Backlog -> To Do')
 
   // 12. Move task from Backlog to Done
   const backlogTask2 = groupResults(runTool('search', { source_id: sourceId, statuses: [BACKLOG] }))[BACKLOG][0]
@@ -215,7 +215,7 @@ formats.forEach((format, i) => {
     ids: backlogTaskIds,
     status: env.STATUS_TODO,
   })
-  assertCounts(sourceId, createExpected(5, 3, 1, 0), 'After bulk Backlog -> ToDo')
+  assertCounts(sourceId, createExpected(5, 3, 1, 0), 'After bulk Backlog -> To Do')
 
   // 16. Search with query filtering
   console.log('\n🔍 Testing search with filtering...')
@@ -249,9 +249,9 @@ formats.forEach((format, i) => {
   console.log(`✅ ${format.name} format test completed successfully!\n`)
 })
 
-// Test markdown parser defaults unrecognized sections to ToDo
+// Test markdown parser defaults unrecognized sections to To Do
 console.log('\n📝 === MARKDOWN PARSER SPECIFIC TEST ===')
-console.log('\n📝 Testing markdown parser defaults unrecognized sections to ToDo...')
+console.log('\n📝 Testing markdown parser defaults unrecognized sections to To Do...')
 
 const mdTestPath = path.join(process.cwd(), 'tmp/test/md-parser-test.md')
 
@@ -270,7 +270,7 @@ util.writeFile(mdTestPath, `# Test Tasks
 - [ ] Task from other header
 
 ## To Do
-- [ ] Existing ToDo task
+- [ ] Existing To Do task
 
 ## Done
 - [x] Completed task
@@ -278,13 +278,13 @@ util.writeFile(mdTestPath, `# Test Tasks
 
 const mdResult = groupResults(tools.search.handler({ source_id: mdSourceId }))
 
-// Check that tasks before sections were moved to ToDo
+// Check that tasks before sections were moved to To Do
 const todoTasks = mdResult[env.STATUS_TODO] || []
-const expectedTodoTexts = ['Task before any section', 'Another task before sections', 'Existing ToDo task'].sort()
+const expectedTodoTexts = ['Task before any section', 'Another task before sections', 'Existing To Do task'].sort()
 const actualTodoTexts = todoTasks.map((t: any) => t.text).sort()
-assert(todoTasks.length === 3, `Expected 3 ToDo tasks (2 from before sections + 1 existing), got ${todoTasks.length}`)
+assert(todoTasks.length === 3, `Expected 3 To Do tasks (2 from before sections + 1 existing), got ${todoTasks.length}`)
 assert(JSON.stringify(actualTodoTexts) === JSON.stringify(expectedTodoTexts),
-  `ToDo task texts don't match. Expected: ${JSON.stringify(expectedTodoTexts)}, Got: ${JSON.stringify(actualTodoTexts)}`)
+  `To Do task texts don't match. Expected: ${JSON.stringify(expectedTodoTexts)}, Got: ${JSON.stringify(actualTodoTexts)}`)
 
 // Check that unrecognized sections are preserved as-is
 const randomSectionTasks = mdResult['Random Section'] || []
@@ -296,7 +296,7 @@ const doneTasks = mdResult[env.STATUS_DONE] || []
 assert(doneTasks.length === 1, `Expected 1 Done task, got ${doneTasks.length}`)
 assert(doneTasks[0].text === 'Completed task', `Expected 'Completed task', got '${doneTasks[0].text}'`)
 
-console.log('✅ Markdown parser correctly defaults unrecognized sections to ToDo!')
+console.log('✅ Markdown parser correctly defaults unrecognized sections to To Do!')
 
 // Test sourceId auto-detection with file-based stack
 console.log('\n🎯 Testing sourceId auto-detection...')

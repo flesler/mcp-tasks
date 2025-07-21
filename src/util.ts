@@ -1,7 +1,8 @@
 import crypto from 'crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import _ from 'lodash'
-import { dirname } from 'path'
+import { dirname, isAbsolute, resolve } from 'path'
+import { fileURLToPath } from 'url'
 
 /** Object.keys() with more accurate types */
 export type KeysOf<T> = Array<keyof T>
@@ -9,6 +10,19 @@ export type KeysOf<T> = Array<keyof T>
 const ID_LENGTH = 4
 
 const util = {
+  // From Cursor
+  CWD: process.env.WORKSPACE_FOLDER_PATHS || process.cwd(),
+  // Relative to the project root
+  ROOT: resolve(dirname(fileURLToPath(import.meta.url)), '..'),
+
+  /** Resolve a path relative to the project root (avoids __dirname recreation everywhere) */
+  resolve(path: string): string {
+    if (isAbsolute(path)) {
+      return path
+    }
+    return resolve(util.ROOT, path)
+  },
+
   readFile(path: string, def?: string): string {
     if (!util.exists(path)) {
       return def || ''
@@ -64,7 +78,7 @@ const util = {
   }),
 
   trimLines(str: string): string {
-    return str.replace(/^ +/gm, '').trim()
+    return str.replace(/^ +\n?/gm, '').trim()
   },
 
   clamp(value: number, min: number, max: number): number {

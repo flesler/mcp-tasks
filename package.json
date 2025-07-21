@@ -2,7 +2,7 @@
   "name": "mcp-tasks",
   "version": "1.1.2",
   "type": "module",
-  "description": "A comprehensive MCP server for task management with multi-format support (Markdown, JSON, YAML)",
+  "description": "A comprehensive and efficient MCP server for task management with multi-format support (Markdown, JSON, YAML)",
   "main": "dist/index.js",
   "bin": {
     "mcp-tasks": "dist/index.js"
@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "clean": "npx rimraf dist/*",
+    "build:watch": "tsc --watch --incremental",
+    "clean": "npx rimraf dist/* *.tsbuildinfo",
     "start": "node dist/index.js",
     "start:http": "TRANSPORT=http node dist/index.js",
     "dev": "npm run ts -- src/index.ts",

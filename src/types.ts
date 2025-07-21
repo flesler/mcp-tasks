@@ -1,6 +1,10 @@
-export interface Source {
-  id: string
+export interface SourceRaw {
   path: string
+  workspace: string
+}
+
+export interface Source extends SourceRaw {
+  id: string
 }
 
 export interface State {

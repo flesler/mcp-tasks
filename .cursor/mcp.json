@@ -1,7 +1,14 @@
 {
   "mcpServers": {
-    "mcp-tasks-local": {
+    "mcp-tasks-local-http": {
       "url": "http://localhost:4680/mcp"
+    },
+    "mcp-tasks-local": {
+      "command": "node",
+      "args": ["/home/flesler/Code/mcp/mcp-tasks/dist/index.js"],
+      "env": {
+        "DEBUG": "true"
+      }
     }
   }
 } 

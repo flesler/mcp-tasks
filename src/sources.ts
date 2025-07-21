@@ -1,45 +1,65 @@
-import { isAbsolute } from 'path'
+import _ from 'lodash'
+import { isAbsolute, resolve } from 'path'
 import env from './env.js'
-import { Source } from './types.js'
+import { Source, SourceRaw } from './types.js'
 import util from './util.js'
 
+const SOURCES_PATH = util.resolve(env.SOURCES_PATH)
+// If it's equal to HOME, it's not a valid workspace
+const CWD = util.CWD === process.env.HOME ? '' : util.CWD
+
 const sources = {
-  load(): string[] {
+  raw(): SourceRaw[] {
     try {
-      const content = util.readFile(env.SOURCES_PATH, '[]')
-      return JSON.parse(content)
+      const content = util.readFile(SOURCES_PATH, '[]')
+      const data: SourceRaw[] = JSON.parse(content)
+      // Filter out non-objects (legacy format)
+      return data.filter(_.isObject)
     } catch {
       return []
     }
   },
 
-  register(path: string): Source {
-    if (!util.isFile(path) || !isAbsolute(path)) {
-      throw new Error(`Must be an absolute path to a file: ${path}. Call again with an absolute path.`)
-    }
-    const paths = sources.load()
-    // Remove if exists and add to front (LIFO)
-    const filtered = paths.filter(p => p !== path)
-    util.writeFile(env.SOURCES_PATH, JSON.stringify([path, ...filtered]))
-    return sources.fromPath(path)
+  load(): Source[] {
+    return sources.raw().map(sources.fromRaw)
   },
 
-  require(id?: string): Source {
-    const paths = sources.load()
-    const srcs = paths.map(sources.fromPath)
-    const src = id ? srcs.find(src => src.id === id) : srcs[0]
-    if (!src) {
-      let msg = 'You must request a file path from the user, make it absolute and call tasks_setup.'
-      if (id) {
-        msg = `Source "${id}" not found. ${msg}`
+  register(sourcePath: string, workspace = CWD): Source {
+    let path = sourcePath
+    if (!isAbsolute(path)) {
+      if (!workspace) {
+        throw new Error('You must specify a workspace directory when registering a relative path.')
       }
+      path = resolve(workspace, path)
+    }
+    const list = sources.raw()
+    // Remove if exists and add to front (LIFO)
+    const filtered = list.filter(s => s.path !== path)
+    const source: SourceRaw = { path, workspace }
+    util.writeFile(SOURCES_PATH, JSON.stringify([source, ...filtered]))
+    return sources.fromRaw(source)
+  },
+
+  require(id?: string, workspace = CWD): Source {
+    const list = sources.load()
+    const msg = 'You must request a file path from the user, make it absolute and call tasks_setup.'
+    if (id) {
+      const src = list.find(src => src.id === id)
+      if (!src) {
+        throw new Error(`Source "${id}" not found. ${msg}`)
+      }
+      return src
+    }
+    // Default to the workspace's most recent
+    const src = list.find(s => s.workspace === workspace) || list[0]
+    if (!src) {
       throw new Error(msg)
     }
     return src
   },
 
-  fromPath(path: string): Source {
-    return { id: util.generateId(path), path }
+  fromRaw(raw: SourceRaw): Source {
+    return { ...raw, id: util.generateId(raw.path) }
   },
 }
 

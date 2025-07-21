@@ -16,11 +16,10 @@ interface Tool<S extends ZodSchema = ZodSchema> {
   handler: (args: z.infer<S>) => any
 }
 
-const DELETED = 'Deleted'
-
 const tools = {
-  setup: defineTool({
+  setup: defineTool('setup', {
     schema: z.object({
+      workspace: z.string().optional().describe('Workspace/project directory path (provided by the IDE or use $PWD)'),
       source_path: schemas.sourcePath,
     }),
     description: util.trimLines(`
@@ -29,24 +28,25 @@ const tools = {
       - Ask the user to clarify the file path if not given, before calling this tool
       - Creates the file if it does not exist
       - Returns the source ID for further use
-      - ${pkg.name} is at version ${pkg.version}
+      ${env.INSTRUCTIONS ? `- ${env.INSTRUCTIONS}` : ''}
     `),
     handler: (args) => {
       // Until verified if we need backwards compatibility in schema
       const path = args.source_path || (args as any).path
       storage.getParser(path)
       // Register the source and get ID
-      const { id } = sources.register(path)
-      return getSummary(id)
+      const source = sources.register(path, args.workspace)
+      return getSummary(source.id)
     },
   }),
 
-  search: defineTool({
+  search: defineTool('search', {
     schema: z.object({
       source_id: schemas.sourceId,
       statuses: z.array(schemas.status).optional().describe('Specific statuses to get. Gets all if omitted'),
-      terms: z.array(z.string()).optional().describe('Search terms to filter tasks by text or status (case-insensitive, OR logic)'),
+      terms: z.array(z.string()).optional().describe('Search terms to filter tasks by text or status (case-insensitive, OR logic, no regex or wildcards)'),
       ids: schemas.ids.optional().describe('Optional list of task IDs to search for'),
+      limit: z.number().int().min(1).optional().describe('Maximum number of results (only for large task lists)'),
     }),
     description: 'Search tasks from specific statuses with optional text & ID filtering',
     isReadOnly: true,
@@ -64,12 +64,14 @@ const tools = {
           util.fuzzySearch(`${task.text} ${task.status}`, term),
         ))
       }
-
+      if (args.limit) {
+        results = results.slice(0, args.limit)
+      }
       return results
     },
   }),
 
-  add: defineTool({
+  add: defineTool('add', {
     schema: z.object({
       source_id: schemas.sourceId,
       texts: z.array(z.string().min(1)).describe('Each text becomes a task'),
@@ -87,16 +89,12 @@ const tools = {
           state.groups[groupName] = state.groups[groupName].filter(text => !texts.includes(text))
         }
       }
-      // Special handling for DELETED status - just remove tasks, don't add them anywhere
-      if (status === DELETED) {
+      let group = state.groups[status]
+      // Special handling for Deleted and other unknown statuses
+      if (!group) {
         storage.save(source.path, state)
         return getSummary(source.id, { tasks: [] })
       }
-      // Ensure target status group exists
-      if (!state.groups[status]) {
-        state.groups[status] = []
-      }
-      const group = state.groups[status]
       const wip = state.groups[env.STATUS_WIP]
       const todos = state.groups[env.STATUS_TODO]
       if (args.status === env.STATUS_WIP && env.AUTO_WIP) {
@@ -119,13 +117,13 @@ const tools = {
     },
   }),
 
-  update: defineTool({
+  update: defineTool('update', {
     schema: z.object({
       source_id: schemas.sourceId,
       ids: schemas.ids,
-      status: z.union([schemas.status, z.literal(DELETED)]).describe(util.trimLines(`
+      status: z.union([schemas.status, z.literal(env.STATUS_DELETED)]).describe(util.trimLines(`
         ${schemas.status.description}
-        - "${DELETED}" when they want these removed
+        - "${env.STATUS_DELETED}" when they want these removed
       `)),
       index: schemas.index,
     }),
@@ -153,7 +151,7 @@ const tools = {
     },
   }),
 
-  summary: defineTool({
+  summary: defineTool('summary', {
     schema: z.object({
       source_id: schemas.sourceId,
     }),
@@ -163,28 +161,54 @@ const tools = {
       return getSummary(args.source_id)
     },
   }),
+
+  debug: defineTool('debug', {
+    schema: z.object({}),
+    description: util.trimLines(`
+      Get debug information about the MCP server and context
+      - ${pkg.name} is at version ${pkg.version}
+    `),
+    isReadOnly: true,
+    isEnabled: env.DEBUG,
+    handler: (args, context) => {
+      return {
+        ...args, context, env: process.env,
+        version: pkg.version, cwd: util.CWD,
+      }
+    },
+  }),
 } as const satisfies Record<string, Tool>
 
 function getSummary(sourceId?: string, extra?: object) {
   const meta = metadata.load(sourceId)
   const counts = _.mapValues(meta.groups, tasks => tasks.length)
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0)
   return JSON.stringify({
-    source: meta.source,
+    source: _.omit(meta.source, ['workspace']),
     ...counts,
+    total,
     instructions: env.INSTRUCTIONS || undefined,
     wip: meta.groups[env.STATUS_WIP],
     ...extra,
   })
 }
 
-function defineTool<S extends ZodSchema>(tool: {
+function defineTool<S extends ZodSchema>(name: string, tool: {
   schema: S
   description: string
   isResource?: boolean
   isReadOnly?: boolean
-  handler: (args: z.infer<S>) => any
+  isEnabled?: boolean
+  handler: (args: z.infer<S>, context?: any) => any
 }) {
-  return { ...tool, isResource: tool.isResource ?? false, isReadOnly: tool.isReadOnly ?? false }
+  const toolName = env.PREFIX_TOOLS ? `tasks_${name}` : name
+  return {
+    ...tool,
+    name: toolName,
+    isResource: tool.isResource ?? false,
+    isReadOnly: tool.isReadOnly ?? false,
+    isEnabled: tool.isEnabled ?? true,
+  }
 }
 
 export default tools

@@ -1,12 +1,9 @@
-import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import fs from 'fs'
+import util from './util.js'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-const packagePath = join(__dirname, '..', 'package.json')
-const pkg = JSON.parse(readFileSync(packagePath, 'utf8'))
+const pkg = JSON.parse(fs.readFileSync(
+  util.resolve('package.json'), 'utf8',
+))
 
 export default {
   name: pkg.name as string,

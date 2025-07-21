@@ -9,14 +9,14 @@ const server = new FastMCP({
 })
 
 // Register all tools & resources
-for (const [name, tool] of Object.entries(tools)) {
-  // Conditionally prefix tool names based on env var
-  const toolName = env.PREFIX_TOOLS ? `tasks_${name}` : name
-
+for (const tool of Object.values(tools)) {
+  if (!tool.isEnabled) {
+    continue
+  }
   if (tool.isResource) {
     // Register as resource
     server.addResource({
-      uri: `resource://${toolName}`,
+      uri: `resource://${tool.name}`,
       name: tool.description,
       mimeType: 'text/plain',
       load() {
@@ -30,14 +30,14 @@ for (const [name, tool] of Object.entries(tools)) {
       annotations: {
         openWorldHint: false, // This tool doesn't interact with external systems
         readOnlyHint: tool.isReadOnly,
-        title: toolName,
+        title: tool.name,
       },
-      name: toolName,
+      name: tool.name,
       description: tool.description,
       parameters: tool.schema,
-      execute: (args, _context) => {
+      execute: (args, context) => {
         try {
-          const result = tool.handler(args as any)
+          const result = tool.handler(args as any, context)
           return Promise.resolve(enforceString(result))
         } catch (err) {
           console.error(err)

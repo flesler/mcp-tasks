@@ -5,27 +5,23 @@ import { FormatParser, State } from '../types.js'
 import util from '../util.js'
 
 const PREFIX = '## '
-const FALLBACK_PREFIX = '# '
+const LINE_REGEX: RegExp = /^ *- *(?:\[.?\])? *(.+) *$/
 
 const md: FormatParser = {
   read(path) {
     const content = util.readFile(path)
-    const lines = content.split('\n')
+    const lines = _.compact(content.split('\n').map(line => line.trim()))
     const state: State = { groups: {} }
-    let prefix = PREFIX
-    if (!content.includes(prefix) && content.split(FALLBACK_PREFIX).length > 1) {
-      prefix = FALLBACK_PREFIX
-    }
 
     let currentGroup = env.STATUS_TODO
-    for (const line of lines.map(line => line.trim())) {
-      if (line.startsWith(prefix)) {
-        const group = line.substring(prefix.length).trim()
+    for (const line of lines) {
+      if (line.startsWith(PREFIX)) {
+        const group = line.substring(PREFIX.length).trim()
         if (group) {
           currentGroup = group
         }
-      } else if (line.startsWith('- ') && currentGroup) {
-        const text = line.substring(2).replace(/^\[[x\-\s]\]\s*/, '').trim()
+      } else {
+        const text = line.match(LINE_REGEX)?.[1]?.trim()
         if (text) {
           if (!state.groups[currentGroup]) {
             state.groups[currentGroup] = []
@@ -42,17 +38,18 @@ const md: FormatParser = {
     let content = `# Tasks - ${title}\n\n`
 
     for (const group of util.keysOf(state.groups)) {
-      content += `## ${group}\n\n`
+      content += `${PREFIX}${group}\n\n`
       const tasks = state.groups[group] || []
       if (tasks.length) {
         for (const task of tasks) {
-          const checkbox = group === env.STATUS_DONE ? '[x]' : '[ ]'
-          content += `- ${checkbox} ${task}\n`
+          const char = group === env.STATUS_DONE ? 'x' :
+            group === env.STATUS_NOTES ? '' : ' '
+          const block = char ? `[${char}] ` : ''
+          content += `- ${block}${task}\n`
         }
       }
       content += '\n'
     }
-
     util.writeFile(path, `${content.trim()}\n`)
   },
 }
