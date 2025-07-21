@@ -14,16 +14,16 @@ Server Usage:
   TRANSPORT=http ${cmd}      # Run MCP server with HTTP transport
 
 CLI Usage:
-  ${cmd} setup <file-path>                    # Setup a task file
-  ${cmd} add <text> [status]      # Add a task
-  ${cmd} search [terms...]        # Search tasks
-  ${cmd} update <task-id> <status> # Update task status
-  ${cmd} summary <source-id>                  # Get task summary
+  ${cmd} setup <file-path> [workspace]        # Setup a task file
+  ${cmd} add <text> [status] [index]          # Add a task
+  ${cmd} search [statuses] [terms]            # Search tasks
+  ${cmd} update <task-ids> <status>           # Update task status
+  ${cmd} summary                              # Get task summary
 
 Examples:
-  ${cmd} setup /home/user/tasks.md
-  ${cmd} add "Implement login" "To Do"
-  ${cmd} search auth login
+  ${cmd} setup tasks.md /home/user/project
+  ${cmd} add "Implement login" "To Do" 0
+  ${cmd} search "To Do,Done" "auth,login"
   ${cmd} update m3Qw,p9Lx "Done"
   ${cmd} summary
 `)

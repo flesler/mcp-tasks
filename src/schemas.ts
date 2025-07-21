@@ -19,9 +19,9 @@ export default {
   `)),
 
   status: z.enum(env.STATUSES as [string, ...string[]]).describe(util.trimLines(`
-    You might need to infer it from the context. e.g.:
-    - "${env.STATUS_TODO}" when they say "Do this next"
-    - "${env.STATUS_WIP}" when they say "First do this"
+    You might need to infer it from the context:
+    - "${env.STATUS_TODO}" for tasks coming up next (e.g. "Do X next")
+    - "${env.STATUS_WIP}" for what you\'ll do now (e.g. "First do X")
     ${env.STATUS_NOTES ? `- "${env.STATUS_NOTES}" to collect non-actionable notes` : ''}
   `)),
 

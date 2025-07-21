@@ -31,11 +31,9 @@ const tools = {
       ${env.INSTRUCTIONS ? `- ${env.INSTRUCTIONS}` : ''}
     `),
     handler: (args) => {
-      // Until verified if we need backwards compatibility in schema
-      const path = args.source_path || (args as any).path
-      storage.getParser(path)
+      storage.getParser(args.source_path)
       // Register the source and get ID
-      const source = sources.register(path, args.workspace)
+      const source = sources.register(args.source_path, args.workspace)
       return getSummary(source.id)
     },
   }),
@@ -156,7 +154,7 @@ const tools = {
     schema: z.object({
       source_id: schemas.sourceId,
     }),
-    description: 'Get count of tasks in each status and the work-in-progress tasks',
+    description: 'Get count of tasks in each status and the work-in-progress tasks. Returned in most tool calls already',
     isReadOnly: true,
     handler: (args) => {
       return getSummary(args.source_id)
@@ -184,12 +182,13 @@ function getSummary(sourceId?: string, extra?: object) {
   const meta = metadata.load(sourceId)
   const counts = _.mapValues(meta.groups, tasks => tasks.length)
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0)
+  const wip = _.camelCase(env.STATUS_WIP)
   return JSON.stringify({
     source: _.omit(meta.source, ['workspace']),
     ...counts,
     total,
     instructions: env.INSTRUCTIONS || undefined,
-    wip: meta.groups[env.STATUS_WIP],
+    [wip]: meta.groups[env.STATUS_WIP],
     ...extra,
   })
 }

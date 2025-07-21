@@ -8,6 +8,25 @@
 
 A comprehensive and **efficient Model Context Protocol (MCP) server** for task management that works seamlessly with Claude, Cursor, and other MCP clients. Designed to minimize tool confusion and maximize LLM budget efficiency while providing powerful search, filtering, and organization capabilities across multiple file formats.
 
+## 📚 **Table of Contents**
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [🤖 AI Integration Tips](#-ai-integration-tips)
+- [🔧 Installation Examples](#-installation-examples)
+- [📁 Supported File Formats](#-supported-file-formats)
+- [🛠️ Available Tools](#️-available-tools)
+- [🎛️ Environment Variables](#️-environment-variables)
+- [📊 File Formats](#-file-formats)
+- [🖥️ Server Usage](#️-server-usage)
+- [💻 CLI Usage](#-cli-usage)
+- [🧪 Development](#-development)
+- [🛠️ Troubleshooting](#️-troubleshooting)
+- [Why not let AI edit files directly?](#why-not-just-have-ai-edit-the-task-files-directly)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [🔗 Links](#-links)
+
 ## ✨ **Features**
 
 - ⚡ **Ultra-efficient design**: Minimal tool count (5 tools) to reduce AI confusion
@@ -325,7 +344,7 @@ groups:
     - Initialize repository
 ```
 
-## 🚀 **CLI Usage**
+## 🖥️ **Server Usage**
 
 ```bash
 # Show help
@@ -344,21 +363,22 @@ STATUS_WIP="Working" AUTO_WIP=false mcp-tasks
 
 ## 💻 **CLI Usage**
 
-You can also use `mcp-tasks` as a command-line tool for quick task management:
+You can also use `mcp-tasks` (or `npx mcp-tasks`) as a command-line tool for quick task management:
 
 ```bash
 # Setup a task file
-mcp-tasks setup path/to/tasks.md $PWD
+mcp-tasks setup tasks.md $PWD                      # Setup with workspace
 
 # Add tasks
 mcp-tasks add "Implement authentication"           # Defaults to "To Do" status
 mcp-tasks add "Write tests" "Backlog"              # Add with specific status
+mcp-tasks add "Fix critical bug" "In Progress" 0   # Add at top (index 0)
 
 # Search tasks
-mcp-tasks search                              # All tasks
-mcp-tasks search "" "auth,login"              # Search for specific terms
-mcp-tasks search "To Do,Done" ""              # Filter by statuses
-mcp-tasks search "In Progress" "bug"          # Filter by status and search terms
+mcp-tasks search                                    # All tasks
+mcp-tasks search "" "auth,login"                   # Search for specific terms
+mcp-tasks search "To Do,Done" ""                   # Filter by statuses
+mcp-tasks search "In Progress" "bug"               # Filter by status and search terms
 
 # Update task status (comma-separated IDs)
 mcp-tasks update m3Qw,p9Lx Done
