@@ -29,7 +29,8 @@ const md: FormatParser = {
           if (!state.groups[currentGroup]) {
             state.groups[currentGroup] = []
           }
-          state.groups[currentGroup].push(text)
+          const unescaped = text.replace(/\\n/g, '\n')
+          state.groups[currentGroup].push(unescaped)
         }
       }
     }
@@ -50,7 +51,8 @@ const md: FormatParser = {
         const char = group === env.STATUS_DONE ? 'x' :
           group === env.STATUS_NOTES ? '' : ' '
         const block = char ? `[${char}] ` : ''
-        content += `- ${block}${task}\n`
+        const escaped = task.replace(/\r?\n/g, '\\n')
+        content += `- ${block}${escaped}\n`
       }
       content += '\n'
     }
