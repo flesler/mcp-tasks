@@ -126,7 +126,7 @@ const tools = {
       `)),
       index: schemas.index,
     }),
-    description: 'Update tasks by ID to a different status. It\'s faster and cheaper if you use this in batch, update all at once',
+    description: 'Update tasks in bulk by ID to a different status. Returns complete summary no need to call tasks_summary afterwards',
     handler: (args) => {
       const meta = metadata.load(args.source_id)
       const texts = args.ids.map((id) => {
@@ -154,7 +154,7 @@ const tools = {
     schema: z.object({
       source_id: schemas.sourceId,
     }),
-    description: 'Get count of tasks in each status and the work-in-progress tasks. Returned in most tool calls already',
+    description: 'Get per-status task counts and the WIP task(s). Redundant after tasks_add/tasks_update',
     isReadOnly: true,
     handler: (args) => {
       return getSummary(args.source_id)
