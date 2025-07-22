@@ -13,7 +13,7 @@ interface Tool<S extends ZodSchema = ZodSchema> {
   description: string
   isResource: boolean
   isReadOnly: boolean
-  handler: (args: z.infer<S>) => any
+  handler: (args: z.infer<S>, context?: any) => any
 }
 
 const tools = {
@@ -77,7 +77,7 @@ const tools = {
       index: schemas.index,
     }),
     description: 'Add new tasks with a specific status. It\'s faster and cheaper if you use this in batch, add all at once',
-    handler: (args) => {
+    handler: (args, context) => {
       let meta = metadata.load(args.source_id)
       const { source, state } = meta
       const { texts, status } = args
@@ -104,8 +104,8 @@ const tools = {
       // Add new tasks at the specified index
       const index = util.clamp(args.index ?? group.length, 0, group.length)
       group.splice(index, 0, ...texts)
-      if (env.AUTO_WIP && !wip.length && todos[0] && todos[0] !== texts[0]) {
-        // Move first ToDo to WIP
+      if (env.AUTO_WIP && !wip.length && todos[0] && (todos[0] !== texts[0] || !context?.update)) {
+        // Move first ToDo to WIP (but not for updates)
         wip.push(todos.shift()!)
       }
       storage.save(source.path, state)
@@ -127,7 +127,7 @@ const tools = {
       index: schemas.index,
     }),
     description: 'Update tasks in bulk by ID to a different status. Returns complete summary no need to call tasks_summary afterwards',
-    handler: (args) => {
+    handler: (args, context = {}) => {
       const meta = metadata.load(args.source_id)
       const texts = args.ids.map((id) => {
         const task = meta.tasksByIdOrText[id]
@@ -146,7 +146,7 @@ const tools = {
         status: args.status,
         index: args.index,
         texts,
-      })
+      }, { ...context, update: true })
     },
   }),
 
