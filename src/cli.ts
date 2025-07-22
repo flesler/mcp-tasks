@@ -1,33 +1,17 @@
 import { ZodError } from 'zod'
-import env from './env.js'
-import tools from './tools.js'
+import tools, { Tool } from './tools.js'
 
 type Tools = typeof tools
 type ToolName = keyof Tools
 
-// Type-safe mapping from tool names to CLI argument parsers
-type ToolMapper = {
-  [K in ToolName]: (args: string[]) => Parameters<Tools[K]['handler']>[0]
-}
-
-const commands: ToolMapper = {
-  setup: ([sourcePath, workspace]) => ({ source_path: sourcePath, workspace: workspace || undefined }),
-  search: ([statuses = '', terms = '']) => ({ statuses: split(statuses), terms: split(terms) }),
-  add: ([text, status = env.STATUS_TODO, index]) => ({ texts: [text], status, index: index ? Number(index) : undefined }),
-  update: ([taskIds, status]) => ({ ids: split(taskIds) || [], status }),
-  summary: () => ({}),
-  debug: () => ({}),
-}
-
 const cli = {
-  isCommand: (arg: string) => arg in commands,
+  isCommand: (arg: string) => arg in tools,
 
-  run(args: string[]) {
+  async run(args: string[]) {
     try {
       const cmd = args.shift() as ToolName
-      let toolArgs: any = commands[cmd](args)
-      toolArgs = tools[cmd].schema.parse(toolArgs)
-      const res = tools[cmd].handler(toolArgs)
+      const tool = tools[cmd]
+      const res = await cli.runTool(tool, tool.fromArgs(args))
       console.log(res)
     } catch (err) {
       if (err instanceof ZodError) {
@@ -38,10 +22,16 @@ const cli = {
       throw err
     }
   },
-}
 
-function split(str: string): string[] | undefined {
-  return str.length > 0 ? str.split(/\s*,\s*/).filter(Boolean) : undefined
+  async runTool(tool: Tool, args: any): Promise<string> {
+    try {
+      const validatedArgs = tool.schema.parse(args)
+      const result = tool.handler(validatedArgs)
+      return typeof result === 'string' ? result : JSON.stringify(result)
+    } catch (err) {
+      throw err
+    }
+  },
 }
 
 export default cli

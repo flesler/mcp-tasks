@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 import cli from './cli.js'
 import pkg from './pkg.js'
+import server from './server.js'
 
 const args = process.argv.slice(2)
-const cmd = pkg.name
-
-if (args.includes('--help') || args.includes('-h')) {
+if (args.length === 0) {
+  await server.start()
+} else if (cli.isCommand(args[0])) {
+  // Run CLI command
+  await cli.run(args)
+} else if (args[0] === '--check') {
+  process.exit(0)
+} else {
+  const cmd = pkg.name
   console.log(`${pkg.author}/${cmd} ${pkg.version}
 ${pkg.description}
 
@@ -28,15 +35,4 @@ Examples:
   ${cmd} summary
 `)
   process.exit(0)
-}
-
-if (cli.isCommand(args[0])) {
-  // Run CLI command
-  cli.run(args)
-} else {
-  // Start the MCP server
-  await import('./server.js')
-
-  // Keep the process alive for stdio transport
-  process.stdin.resume()
 }

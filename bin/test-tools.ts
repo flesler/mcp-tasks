@@ -3,6 +3,7 @@
 import _ from 'lodash'
 import path from 'path'
 import env from '../src/env.js'
+import storage from '../src/storage.js'
 import tools from '../src/tools.js'
 import util from '../src/util.js'
 
@@ -40,18 +41,13 @@ function groupResults(tasks: any): any {
   return grouped
 }
 
-// Test all formats with the same complete test suite
-const formats = [
-  { ext: 'md', icon: '📝', name: 'Markdown' },
-  { ext: 'json', icon: '📊', name: 'JSON' },
-  { ext: 'yml', icon: '📄', name: 'YML' },
-]
-
 const sourceIds: string[] = []
 
-formats.forEach((format, i) => {
-  console.log(`${format.icon} === TEST ${i + 1}: ${format.name} Format - COMPLETE SUITE ===`)
-  const absolute = path.join(process.cwd(), `tmp/test/tools.${format.ext}`)
+// Test all formats with the same complete test suite
+storage.supportedExtensions().forEach((ext, i) => {
+  const format = ext.toUpperCase()
+  console.log(`${format} === TEST ${i + 1}: ${format} Format - COMPLETE SUITE ===`)
+  const absolute = path.join(process.cwd(), `tmp/test/tools.${ext}`)
   const sourceId = setupFile(absolute)
   sourceIds.push(sourceId)
 
@@ -61,7 +57,7 @@ formats.forEach((format, i) => {
   // 2. Basic task addition (AUTO_WIP moves one to In Progress)
   runTool('add', {
     source_id: sourceId,
-    texts: [`${format.name} task 1`, `${format.name} task 2`],
+    texts: [`${format} task 1`, `${format} task 2`],
     status: env.STATUS_TODO,
   })
   assertCounts(sourceId, createExpected(2, 0, 0, 0), 'After adding 2 tasks')
@@ -71,12 +67,12 @@ formats.forEach((format, i) => {
   const readResult = groupResults(readResultArray)
 
   assert(readResult[env.STATUS_TODO] && readResult[env.STATUS_TODO].length === 2, `Should have 2 tasks in ${env.STATUS_TODO}`)
-  assert(readResult[env.STATUS_TODO][0].text === `${format.name} task 1`, 'First task text should match')
+  assert(readResult[env.STATUS_TODO][0].text === `${format} task 1`, 'First task text should match')
 
   // 3. Add to different status
   runTool('add', {
     source_id: sourceId,
-    texts: [`${format.name} Backlog task`],
+    texts: [`${format} Backlog task`],
     status: BACKLOG,
   })
   assertCounts(sourceId, createExpected(2, 0, 1, 0), 'After adding Backlog task')
@@ -176,7 +172,7 @@ formats.forEach((format, i) => {
   assertCounts(sourceId, createExpected(3, 2, 3, 0), 'After Backlog -> Done')
 
   // 13. Add back a task that was moved earlier - should create new since it no longer exists
-  const duplicateText = `${format.name} task 1`
+  const duplicateText = `${format} task 1`
   console.log(`🔍 Looking for existing task: "${duplicateText}"`)
   const beforeDupe = groupResults(runTool('search', { source_id: sourceId }))
   console.log('Current state before duplicate test:', Object.entries(beforeDupe).map(([k, v]) => `${k}:${(v as any[]).length}`))
@@ -223,9 +219,9 @@ formats.forEach((format, i) => {
   groupResults(allResults)
   console.log(`📊 All tasks: [${Object.entries(_.groupBy(allResults, 'status')).map(([s, tasks]) => `"${s}:${tasks.length}"`)}]`)
 
-  const filteredResults = tools.search.handler({ source_id: sourceId, terms: [format.name.toUpperCase()] })
+  const filteredResults = tools.search.handler({ source_id: sourceId, terms: [format.toUpperCase()] })
   groupResults(filteredResults)
-  console.log(`🔍 Filtered by "${format.name.toUpperCase()}": ${filteredResults.length} tasks`)
+  console.log(`🔍 Filtered by "${format.toUpperCase()}": ${filteredResults.length} tasks`)
 
   // Test ID search functionality
   if (filteredResults.length >= 2) {
@@ -246,7 +242,7 @@ formats.forEach((format, i) => {
     console.log(`  ${status}: ${tasks.length} tasks`)
   })
 
-  console.log(`✅ ${format.name} format test completed successfully!\n`)
+  console.log(`✅ ${format} format test completed successfully!\n`)
 })
 
 // Test markdown parser defaults unrecognized sections to To Do
@@ -319,7 +315,7 @@ console.log('\n🚨 === ERROR CONDITION TESTS ===')
 // Test 1: Invalid path for setup (not absolute)
 console.log('\n📍 Testing setup with relative path...')
 try {
-  tools.setup.handler({ source_path: 'relative/path.md' })
+  tools.setup.handler({ source_path: 'tmp/relative/path.md' })
   console.error('❌ Expected error for relative path')
 } catch (error: any) {
   if (error.message.includes('Must be an absolute to a file')) {

@@ -13,7 +13,10 @@
     "declarationDir": "./dist",
     "sourceMap": true,
     "rootDir": "src",
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "declarationMap": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

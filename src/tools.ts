@@ -14,6 +14,7 @@ interface Tool<S extends ZodSchema = ZodSchema> {
   isResource: boolean
   isReadOnly: boolean
   handler: (args: z.infer<S>, context?: any) => any
+  fromArgs: (args: string[]) => z.infer<S>
 }
 
 const tools = {
@@ -22,6 +23,7 @@ const tools = {
       workspace: z.string().optional().describe('Workspace/project directory path (provided by the IDE or use $PWD)'),
       source_path: schemas.sourcePath,
     }),
+    fromArgs: ([sourcePath, workspace]) => ({ source_path: sourcePath, workspace: workspace || undefined }),
     description: util.trimLines(`
       Initializes an source file from a path
       - Always call once per conversation when asked to use these tools
@@ -46,6 +48,7 @@ const tools = {
       ids: schemas.ids.optional().describe('Optional list of task IDs to search for'),
       limit: z.number().int().min(1).optional().describe('Maximum number of results (only for large task lists)'),
     }),
+    fromArgs: ([statuses = '', terms = '']) => ({ statuses: split(statuses), terms: split(terms) }),
     description: 'Search tasks from specific statuses with optional text & ID filtering',
     isReadOnly: true,
     handler: (args) => {
@@ -76,6 +79,7 @@ const tools = {
       status: schemas.status,
       index: schemas.index,
     }),
+    fromArgs: ([text, status = env.STATUS_TODO, index]) => ({ texts: [text], status, index: index ? Number(index) : undefined }),
     description: 'Add new tasks with a specific status. It\'s faster and cheaper if you use this in batch, add all at once',
     handler: (args, context) => {
       let meta = metadata.load(args.source_id)
@@ -126,6 +130,7 @@ const tools = {
       `)),
       index: schemas.index,
     }),
+    fromArgs: ([taskIds, status]) => ({ ids: split(taskIds) || [], status }),
     description: 'Update tasks in bulk by ID to a different status. Returns complete summary no need to call tasks_summary afterwards',
     handler: (args, context = {}) => {
       const meta = metadata.load(args.source_id)
@@ -154,6 +159,7 @@ const tools = {
     schema: z.object({
       source_id: schemas.sourceId,
     }),
+    fromArgs: () => ({}),
     description: 'Get per-status task counts and the WIP task(s). Redundant after tasks_add/tasks_update',
     isReadOnly: true,
     handler: (args) => {
@@ -163,6 +169,7 @@ const tools = {
 
   debug: defineTool('debug', {
     schema: z.object({}),
+    fromArgs: () => ({}),
     description: util.trimLines(`
       Get debug information about the MCP server and context
       - ${pkg.name} is at version ${pkg.version}
@@ -200,6 +207,7 @@ function defineTool<S extends ZodSchema>(name: string, tool: {
   isReadOnly?: boolean
   isEnabled?: boolean
   handler: (args: z.infer<S>, context?: any) => any
+  fromArgs: (args: string[]) => z.infer<S>
 }) {
   const toolName = env.PREFIX_TOOLS ? `tasks_${name}` : name
   return {
@@ -209,6 +217,10 @@ function defineTool<S extends ZodSchema>(name: string, tool: {
     isReadOnly: tool.isReadOnly ?? false,
     isEnabled: tool.isEnabled ?? true,
   }
+}
+
+function split(str: string): string[] | undefined {
+  return str.length > 0 ? str.split(/\s*,\s*/).filter(Boolean) : undefined
 }
 
 export default tools

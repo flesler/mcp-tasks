@@ -4,22 +4,26 @@ import pkg from './pkg.js'
 import util from './util.js'
 
 // Can't log to stdio as it disrupts the JSON-RPC protocol
-const LOG_FILE = util.resolve('./app.log')
+const LOG_FILE = util.resolve('./logs.json')
 
-function formatMessage(level: string, ...args: any[]): string {
-  const timestamp = new Date().toISOString()
-  const message = args.map(arg =>
-    typeof arg === 'object' ? JSON.stringify(arg) : String(arg),
-  ).join(' ')
-  return [timestamp, pkg.version, util.CWD, level, message].join('\t') + '\n'
+function formatMessage(level: string, msg: string, data?: object): string {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    level,
+    version: pkg.version,
+    cwd: util.CWD,
+    message: msg,
+    ...data,
+  }
+  return JSON.stringify(logEntry) + '\n'
 }
 
-function writeLog(level: string, ...args: any[]): void {
+function writeLog(level: string, msg: string, data?: object): void {
   if (!env.DEBUG) {
     return
   }
   try {
-    const formatted = formatMessage(level, ...args)
+    const formatted = formatMessage(level, msg, data)
     fs.appendFileSync(LOG_FILE, formatted, 'utf-8')
   } catch (err) {
     // Fallback to stderr if file writing fails
@@ -28,10 +32,10 @@ function writeLog(level: string, ...args: any[]): void {
 }
 
 const logger = {
-  log: (...args: any[]) => writeLog('LOG', ...args),
-  info: (...args: any[]) => writeLog('INFO', ...args),
-  warn: (...args: any[]) => writeLog('WARN', ...args),
-  error: (...args: any[]) => writeLog('ERROR', ...args),
+  log: (msg: string, data?: object) => writeLog('LOG', msg, data),
+  info: (msg: string, data?: object) => writeLog('INFO', msg, data),
+  warn: (msg: string, data?: object) => writeLog('WARN', msg, data),
+  error: (msg: string, data?: object) => writeLog('ERROR', msg, data),
 }
 
 export default logger

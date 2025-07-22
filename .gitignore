@@ -4,6 +4,7 @@ tmp/
 .eslintcache
 bin/test.ts
 sources.json
+logs.json
 
 # Dependencies
 node_modules/
