@@ -38,7 +38,9 @@ for (const tool of Object.values(tools)) {
       parameters: tool.schema,
       execute: (args, context) => {
         try {
-          const result = tool.handler(args as any, context)
+          // Validate inputs with Zod like we do in CLI
+          const validatedArgs = tool.schema.parse(args)
+          const result = tool.handler(validatedArgs as any, context)
           return Promise.resolve(enforceString(result))
         } catch (err) {
           logger.error(err)
