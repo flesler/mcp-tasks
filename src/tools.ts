@@ -179,7 +179,7 @@ const tools = {
     handler: (args, context) => {
       return {
         ...args, processEnv: process.env, argv: process.argv,
-        env, context, version: pkg.version, CWD: util.CWD, ROOT: util.ROOT,
+        env, context, version: pkg.version, CWD: util.CWD, ROOT: util.REPO,
       }
     },
   }),

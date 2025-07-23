@@ -10,7 +10,35 @@ import util from '../src/util.js'
 // Disable AUTO_WIP for consistent test expectations
 env.AUTO_WIP = false
 
-console.log('🧪 Testing tools...')
+// Track test failures for proper exit codes
+let hasFailures = false
+
+// Centralized logging helpers that track failures and respect SILENT mode
+function log(message: string) {
+  if (!process.env.SILENT) {
+    console.log(message)
+  }
+}
+
+function logError(message: string) {
+  hasFailures = true
+  if (!process.env.SILENT) {
+    console.error('❌ Error: ' + message)
+  }
+}
+
+// Global error handlers to ensure exit code 1 on any failure
+process.on('uncaughtException', (err) => {
+  logError('Uncaught exception: ' + err.message)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason) => {
+  logError('Unhandled rejection: ' + String(reason))
+  process.exit(1)
+})
+
+log('🧪 Testing tools...')
 
 const BACKLOG = 'Backlog'
 
@@ -26,9 +54,9 @@ function createExpected(todo: number, done: number, backlog: number = 0, inProgr
 
 // Helper function to group search results by status
 function groupResults(tasks: any): any {
-  console.log('groupResults input:', typeof tasks, tasks)
+  log(`groupResults input: ${typeof tasks} ${JSON.stringify(tasks)}`)
   if (!Array.isArray(tasks)) {
-    console.log('Search returned non-array:', tasks)
+    log(`Search returned non-array: ${JSON.stringify(tasks)}`)
     return {}
   }
   const grouped: any = {}
@@ -46,7 +74,7 @@ const sourceIds: string[] = []
 // Test all formats with the same complete test suite
 storage.supportedExtensions().forEach((ext, i) => {
   const format = ext.toUpperCase()
-  console.log(`${format} === TEST ${i + 1}: ${format} Format - COMPLETE SUITE ===`)
+  log(`${format} === TEST ${i + 1}: ${format} Format - COMPLETE SUITE ===`)
   const absolute = path.join(process.cwd(), `tmp/test/tools.${ext}`)
   const sourceId = setupFile(absolute)
   sourceIds.push(sourceId)
@@ -63,7 +91,7 @@ storage.supportedExtensions().forEach((ext, i) => {
   assertCounts(sourceId, createExpected(2, 0, 0, 0), 'After adding 2 tasks')
 
   const readResultArray = runTool('search', { source_id: sourceId })
-  console.log('Raw search result:', readResultArray)
+  log(`Raw search result: ${JSON.stringify(readResultArray)}`)
   const readResult = groupResults(readResultArray)
 
   assert(readResult[env.STATUS_TODO] && readResult[env.STATUS_TODO].length === 2, `Should have 2 tasks in ${env.STATUS_TODO}`)
@@ -79,7 +107,7 @@ storage.supportedExtensions().forEach((ext, i) => {
 
   // 4. Task operations (update/move)
   const taskToMove = groupResults(runTool('search', { source_id: sourceId, statuses: [env.STATUS_TODO] }))[env.STATUS_TODO][0]
-  console.log(`🎯 Moving task ID: ${taskToMove.id}`)
+  log(`🎯 Moving task ID: ${taskToMove.id}`)
 
   runTool('update', {
     source_id: sourceId,
@@ -98,7 +126,7 @@ storage.supportedExtensions().forEach((ext, i) => {
 
   const backlogTasks = groupResults(runTool('search', { source_id: sourceId, statuses: [BACKLOG] }))
   const taskIds = backlogTasks[BACKLOG].slice(0, 2).map((t: any) => t.id)
-  console.log(`🎯 Moving multiple task IDs: ${taskIds}`)
+  log(`🎯 Moving multiple task IDs: ${taskIds}`)
 
   runTool('update', {
     source_id: sourceId,
@@ -173,11 +201,11 @@ storage.supportedExtensions().forEach((ext, i) => {
 
   // 13. Add back a task that was moved earlier - should create new since it no longer exists
   const duplicateText = `${format} task 1`
-  console.log(`🔍 Looking for existing task: "${duplicateText}"`)
+  log(`🔍 Looking for existing task: "${duplicateText}"`)
   const beforeDupe = groupResults(runTool('search', { source_id: sourceId }))
-  console.log('Current state before duplicate test:', Object.entries(beforeDupe).map(([k, v]) => `${k}:${(v as any[]).length}`))
+  log(`Current state before duplicate test: ${Object.entries(beforeDupe).map(([k, v]) => `${k}:${(v as any[]).length}`)}`)
   const existingTask = Object.values(beforeDupe).flat().find((t: any) => t.text === duplicateText)
-  console.log('Found existing task:', existingTask)
+  log(`Found existing task: ${JSON.stringify(existingTask)}`)
 
   runTool('add', {
     source_id: sourceId,
@@ -214,40 +242,40 @@ storage.supportedExtensions().forEach((ext, i) => {
   assertCounts(sourceId, createExpected(5, 3, 1, 0), 'After bulk Backlog -> To Do')
 
   // 16. Search with query filtering
-  console.log('\n🔍 Testing search with filtering...')
+  log('\n🔍 Testing search with filtering...')
   const allResults = tools.search.handler({ source_id: sourceId })
   groupResults(allResults)
-  console.log(`📊 All tasks: [${Object.entries(_.groupBy(allResults, 'status')).map(([s, tasks]) => `"${s}:${tasks.length}"`)}]`)
+  log(`📊 All tasks: [${Object.entries(_.groupBy(allResults, 'status')).map(([s, tasks]) => `"${s}:${tasks.length}"`)}]`)
 
   const filteredResults = tools.search.handler({ source_id: sourceId, terms: [format.toUpperCase()] })
   groupResults(filteredResults)
-  console.log(`🔍 Filtered by "${format.toUpperCase()}": ${filteredResults.length} tasks`)
+  log(`🔍 Filtered by "${format.toUpperCase()}": ${filteredResults.length} tasks`)
 
   // Test ID search functionality
   if (filteredResults.length >= 2) {
     const testIds = [filteredResults[0].id, filteredResults[1].id]
     const idResults = tools.search.handler({ source_id: sourceId, ids: testIds })
     groupResults(idResults)
-    console.log(`🔍 Filtered by IDs [${testIds.join(', ')}]: ${idResults.length} tasks`)
+    log(`🔍 Filtered by IDs [${testIds.join(', ')}]: ${idResults.length} tasks`)
     assert(idResults.length === 2, `Should find exactly 2 tasks by ID, got ${idResults.length}`)
     assert(idResults.every((task: any) => testIds.includes(task.id)), 'All returned tasks should have the requested IDs')
-    console.log('✅ ID search works correctly')
+    log('✅ ID search works correctly')
   }
 
   const finalResults = tools.search.handler({ source_id: sourceId })
   groupResults(finalResults)
-  console.log('📊 Final task distribution:')
+  log('📊 Final task distribution:')
   const finalGrouped = _.groupBy(finalResults, 'status')
   Object.entries(finalGrouped).forEach(([status, tasks]: [string, any]) => {
-    console.log(`  ${status}: ${tasks.length} tasks`)
+    log(`  ${status}: ${tasks.length} tasks`)
   })
 
-  console.log(`✅ ${format} format test completed successfully!\n`)
+  log(`✅ ${format} format test completed successfully!\n`)
 })
 
 // Test markdown parser defaults unrecognized sections to To Do
-console.log('\n📝 === MARKDOWN PARSER SPECIFIC TEST ===')
-console.log('\n📝 Testing markdown parser defaults unrecognized sections to To Do...')
+log('\n📝 === MARKDOWN PARSER SPECIFIC TEST ===')
+log('\n📝 Testing markdown parser defaults unrecognized sections to To Do...')
 
 const mdTestPath = path.join(process.cwd(), 'tmp/test/md-parser-test.md')
 
@@ -292,10 +320,10 @@ const doneTasks = mdResult[env.STATUS_DONE] || []
 assert(doneTasks.length === 1, `Expected 1 Done task, got ${doneTasks.length}`)
 assert(doneTasks[0].text === 'Completed task', `Expected 'Completed task', got '${doneTasks[0].text}'`)
 
-console.log('✅ Markdown parser correctly defaults unrecognized sections to To Do!')
+log('✅ Markdown parser correctly defaults unrecognized sections to To Do!')
 
 // Test sourceId auto-detection with file-based stack
-console.log('\n🎯 Testing sourceId auto-detection...')
+log('\n🎯 Testing sourceId auto-detection...')
 const testFile = path.join(process.cwd(), 'tmp/test/auto-detect.md')
 const autoSourceId = setupFile(testFile)
 
@@ -310,66 +338,66 @@ const autoResult = groupResults(runTool('search', { source_id: autoSourceId }))
 assert(autoResult[env.STATUS_TODO].length === 1, 'Auto-detection should work')
 assert(autoResult[env.STATUS_TODO][0].text === 'Auto-detected task', 'Auto-detected task should match')
 
-console.log('\n🚨 === ERROR CONDITION TESTS ===')
+log('\n🚨 === ERROR CONDITION TESTS ===')
 
-// Test 1: Invalid path for setup (not absolute)
-console.log('\n📍 Testing setup with relative path...')
+// Test 1: Invalid path for setup (relative path without workspace)
+log('\n📍 Testing setup with relative path without workspace...')
 try {
-  tools.setup.handler({ source_path: 'tmp/relative/path.md' })
-  console.error('❌ Expected error for relative path')
-} catch (error: any) {
-  if (error.message.includes('Must be an absolute to a file')) {
-    console.log('✅ Correctly rejected relative path')
+  tools.setup.handler({ source_path: 'tmp/relative/path.md', workspace: '' })
+  logError('Expected error for relative path without workspace')
+} catch (err) {
+  if (err.message.includes('You must specify a workspace directory when registering a relative path')) {
+    log('✅ Correctly rejected relative path without workspace')
   } else {
-    console.error(`❌ Unexpected error: ${error.message}`)
+    logError(`Unexpected error: ${err.message}`)
   }
 }
 
 // Test 2: Invalid path for setup (directory without file extension)
-console.log('\n📍 Testing setup with directory path...')
+log('\n📍 Testing setup with directory path...')
 try {
   tools.setup.handler({ source_path: '/tmp/nonexistent_directory' })
-  console.error('❌ Expected error for directory path')
-} catch (error: any) {
-  if (error.message.includes('Unsupported file extension')) {
-    console.log('✅ Correctly rejected path without valid file extension')
+  logError('Expected error for directory path')
+} catch (err) {
+  if (err.message.includes('Unsupported file extension')) {
+    log('✅ Correctly rejected path without valid file extension')
   } else {
-    console.error(`❌ Unexpected error: ${error.message}`)
+    logError(`Unexpected error: ${err.message}`)
   }
 }
 
 // Test 2b: Test sources.ts validation (path with extension but not a file)
-console.log('\n📍 Testing setup with path that looks like file but isn\'t...')
+log('\n📍 Testing setup with path that looks like file but isn\'t...')
 try {
   // Use a path that has extension but is actually a directory
   tools.setup.handler({ source_path: '/home.md' })
-  console.error('❌ Expected error for path that is not a file')
-} catch (error: any) {
-  if (error.message.includes('Must be an absolute to a file')) {
-    console.log('✅ Correctly rejected path that is not actually a file')
+  logError('Expected error for path that is not a file')
+} catch (err) {
+  if (err.message.includes('Must be an absolute to a file')) {
+    log('✅ Correctly rejected path that is not actually a file')
   } else {
-    console.error(`❌ Different validation error (still good): ${error.message}`)
-    console.log('✅ System correctly validates paths')
+    log(`ℹ️ Different validation error (still good): ${err.message}`)
+    log('✅ System correctly validates paths')
   }
 }
 
 // Test 3: Invalid source ID
-console.log('\n📍 Testing with non-existent source ID...')
+log('\n📍 Testing with non-existent source ID...')
 try {
   tools.summary.handler({ source_id: 'INVALID' })
-  console.error('❌ Expected error for invalid source ID')
-} catch (error: any) {
-  if (error.message.includes('Source "INVALID" not found. You must request a file path from the user, make it absolute and call tasks_setup.')) {
-    console.log('✅ Correctly rejected invalid source ID with AI-helpful message')
+  logError('Expected error for invalid source ID')
+} catch (err) {
+  if (err.message.includes('Source "INVALID" not found. You must request a file path from the user, make it absolute and call tasks_setup.')) {
+    log('✅ Correctly rejected invalid source ID with AI-helpful message')
   } else {
-    console.error(`❌ Unexpected error: ${error.message}`)
+    logError(`Unexpected error: ${err.message}`)
   }
 }
 
 // Test 4: DELETED status validation (positive test)
-console.log('\n📍 Testing DELETED status...')
+log('\n📍 Testing DELETED status...')
 try {
-  const testPath = path.resolve('./tmp/deleted-test.md')
+  const testPath = util.resolve('./tmp/deleted-test.md', util.REPO)
   const sourceId = setupFile(testPath)
 
   // Add a task first
@@ -388,23 +416,23 @@ try {
       ids: [tasks[0].id],
       status: 'Deleted',
     })
-    console.log('✅ DELETED status accepted by schema validation')
+    log('✅ DELETED status accepted by schema validation')
   } else {
-    console.log('⚠️  No tasks found to delete')
+    log('⚠️  No tasks found to delete')
   }
-} catch (error: any) {
-  console.error(`❌ DELETED status validation failed: ${error.message}`)
+} catch (err) {
+  logError(`DELETED status validation failed: ${err.message}`)
 }
 
-console.log('\n✅ All error condition tests passed!')
-console.log('🎉 All tests completed successfully!')
+log('\n✅ All error condition tests passed!')
+log('🎉 All tests completed successfully!')
 
-console.log('\n🔍 === ENHANCED SEARCH TESTS ===')
+log('\n🔍 === ENHANCED SEARCH TESTS ===')
 
 // Test enhanced search features: array search + status matching
-console.log('\n📍 Testing enhanced search features...')
+log('\n📍 Testing enhanced search features...')
 try {
-  const testPath = path.resolve('./tmp/enhanced-search-test.md')
+  const testPath = util.resolve('./tmp/enhanced-search-test.md', util.REPO)
   const sourceId = setupFile(testPath)
 
   // Add diverse test tasks
@@ -425,36 +453,36 @@ try {
     source_id: sourceId,
     terms: ['auth', 'deploy'],  // Multiple search terms
   })
-  console.log('✅ Array search found:', arraySearch.length, 'tasks (auth OR deploy)')
+  log(`✅ Array search found: ${arraySearch.length} tasks (auth OR deploy)`)
 
   // Test 2: Status search (user passes status by mistake)
   const statusSearch = tools.search.handler({
     source_id: sourceId,
     terms: ['Done'],  // Status search as array
   })
-  console.log('✅ Status search found:', statusSearch.length, 'tasks (Done status)')
+  log(`✅ Status search found: ${statusSearch.length} tasks (Done status)`)
 
   // Test 3: Mixed search (text + status in one search)
   const mixedSearch = tools.search.handler({
     source_id: sourceId,
     terms: ['user', 'To Do'],  // Mixed search terms
   })
-  console.log('✅ Mixed search found:', mixedSearch.length, 'tasks (user OR To Do)')
+  log(`✅ Mixed search found: ${mixedSearch.length} tasks (user OR To Do)`)
 
   // Test 4: Single string search (now as single-element array)
   const singleSearch = tools.search.handler({
     source_id: sourceId,
     terms: ['database'],  // Single search term in array
   })
-  console.log('✅ Single search found:', singleSearch.length, 'tasks (database)')
+  log(`✅ Single search found: ${singleSearch.length} tasks (database)`)
 
-  console.log('✅ Enhanced search features working perfectly!')
+  log('✅ Enhanced search features working perfectly!')
 
-} catch (error: any) {
-  console.error('❌ Enhanced search test failed:', error.message)
+} catch (err) {
+  logError(`Enhanced search test failed: ${err.message}`)
 }
 
-console.log('\n🎉 All tests completed successfully!')
+log('\n🎉 All tests completed successfully!')
 
 function setupFile(absolute: string): string {
   util.writeFile(absolute, '')
@@ -466,7 +494,7 @@ function runTool(name: string, args: any = {}) {
   if (!tool) {
     throw new Error(`Tool ${name} not found`)
   }
-  console.log(`🔧 ${name}(${Object.keys(args).map(k => `${k}=${JSON.stringify(args[k])}`).join(', ')})`)
+  log(`🔧 ${name}(${Object.keys(args).map(k => `${k}=${JSON.stringify(args[k])}`).join(', ')})`)
   const result = tool.handler(args)
   return result
 }
@@ -483,15 +511,15 @@ function dump(sourceId: string, prefix = '') {
     }
   })
 
-  console.log(`${prefix}${JSON.stringify(counts)}`)
+  log(`${prefix}${JSON.stringify(counts)}`)
   return counts
 }
 
 function assert(condition: boolean, message: string) {
   if (condition) {
-    console.log(`✅ ${message}`)
+    log(`✅ ${message}`)
   } else {
-    console.error(`❌ ASSERTION FAILED: ${message}`)
+    logError(`ASSERTION FAILED: ${message}`)
     throw new Error(`Assertion failed: ${message}`)
   }
 }
@@ -503,3 +531,6 @@ function assertCounts(sourceId: string, expected: any, label: string) {
   assert(summary[BACKLOG] === expected[BACKLOG], `${label}: Backlog count should be ${expected[BACKLOG]}, got ${summary[BACKLOG]}`)
   assert(summary[env.STATUS_WIP] === expected[env.STATUS_WIP], `${label}: ${env.STATUS_WIP} count should be ${expected[env.STATUS_WIP]}, got ${summary[env.STATUS_WIP]}`)
 }
+
+// Exit with proper code based on test results
+process.exit(hasFailures ? 1 : 0)

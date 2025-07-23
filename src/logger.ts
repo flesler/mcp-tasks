@@ -4,7 +4,7 @@ import pkg from './pkg.js'
 import util from './util.js'
 
 // Can't log to stdio as it disrupts the JSON-RPC protocol
-const LOG_FILE = util.resolve('./logs.json')
+const LOG_FILE = util.resolve('./logs.json', util.REPO)
 
 function formatMessage(level: string, msg: string, data?: object): string {
   const logEntry = {

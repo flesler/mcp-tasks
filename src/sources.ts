@@ -1,10 +1,10 @@
 import _ from 'lodash'
-import { isAbsolute, resolve } from 'path'
+import { isAbsolute } from 'path'
 import env from './env.js'
 import { Source, SourceRaw } from './types.js'
 import util from './util.js'
 
-const SOURCES_PATH = util.resolve(env.SOURCES_PATH)
+const SOURCES_PATH = util.resolve(env.SOURCES_PATH, util.REPO)
 // If it's equal to HOME, it's not a valid workspace
 const CWD = util.CWD === process.env.HOME ? '' : util.CWD
 
@@ -30,7 +30,7 @@ const sources = {
       if (!workspace) {
         throw new Error('You must specify a workspace directory when registering a relative path.')
       }
-      path = resolve(workspace, path)
+      path = util.resolve(path, workspace)
     }
     const list = sources.raw()
     // Remove if exists and add to front (LIFO)

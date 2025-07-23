@@ -8,19 +8,20 @@ import { fileURLToPath } from 'url'
 export type KeysOf<T> = Array<keyof T>
 
 const ID_LENGTH = 4
+// From Cursor
+const CWD = process.env.WORKSPACE_FOLDER_PATHS || process.cwd()
 
 const util = {
-  // From Cursor
-  CWD: process.env.WORKSPACE_FOLDER_PATHS || process.cwd(),
+  CWD,
   // Relative to the project root
-  ROOT: resolve(dirname(fileURLToPath(import.meta.url)), '..'),
+  REPO: resolve(dirname(fileURLToPath(import.meta.url)), '..'),
 
   /** Resolve a path relative to the project root (avoids __dirname recreation everywhere) */
-  resolve(path: string): string {
+  resolve(path: string, dir = CWD): string {
     if (isAbsolute(path)) {
       return path
     }
-    return resolve(util.ROOT, path)
+    return resolve(dir, path)
   },
 
   readFile(path: string, def?: string): string {

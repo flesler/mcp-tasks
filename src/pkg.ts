@@ -1,13 +1,11 @@
-import fs from 'fs'
+import type { PackageJson } from 'types-package-json'
 import util from './util.js'
 
-const pkg = JSON.parse(fs.readFileSync(
-  util.resolve('package.json'), 'utf8',
-))
+const pkgPath = util.resolve('package.json', util.REPO)
+const { default: pkg } = await import(pkgPath, { with: { type: 'json' } }) as { default: Partial<PackageJson> }
 
 export default {
   ...pkg,
-  name: pkg.name as string,
   version: pkg.version as `${number}.${number}.${number}`,
   author: pkg.homepage?.split('/')[3] || 'unknown',
 }
