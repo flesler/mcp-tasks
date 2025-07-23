@@ -1,8 +1,8 @@
 {
   "name": "mcp-tasks",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "type": "module",
-  "description": "A comprehensive and efficient MCP server for task management with multi-format support (Markdown, JSON, YAML)",
+  "description": "An efficient task manager. Designed to minimize tool confusion and maximize LLM budget efficiency while providing powerful search, filtering, and organization capabilities across multiple file formats (Markdown, JSON, YAML)",
   "main": "dist/index.js",
   "bin": {
     "mcp-tasks": "dist/index.js"

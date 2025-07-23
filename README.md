@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/docker/v/flesler/mcp-tasks?label=docker)](https://hub.docker.com/r/flesler/mcp-tasks)
 
-A comprehensive and **efficient Model Context Protocol (MCP) server** for task management that works seamlessly with Claude, Cursor, and other MCP clients. Designed to minimize tool confusion and maximize LLM budget efficiency while providing powerful search, filtering, and organization capabilities across multiple file formats.
+An efficient task manager. Designed to minimize tool confusion and maximize LLM budget efficiency while providing powerful search, filtering, and organization capabilities across multiple file formats (Markdown, JSON, YAML)
 
 ## 📚 **Table of Contents**
 
@@ -44,9 +44,10 @@ A comprehensive and **efficient Model Context Protocol (MCP) server** for task m
 
 ## 🚀 **Quick Start**
 
+Add this to `~/.cursor/mcp.json` for Cursor, `~/.config/claude_desktop_config.json` for Claude Desktop.
+
 ### Option 1: NPX (Recommended)
-```bash
-# Add to your MCP client config:
+```json
 {
   "mcpServers": {
     "mcp-tasks": {
@@ -58,8 +59,7 @@ A comprehensive and **efficient Model Context Protocol (MCP) server** for task m
 ```
 
 ### Option 2: Docker
-```bash
-# Add to your MCP client config:
+```json
 {
   "mcpServers": {
     "mcp-tasks": {
@@ -98,20 +98,6 @@ npx mcp-tasks add "Your new task text" "To Do" 0
 
 ## 🔧 **Installation Examples**
 
-### Cursor (`~/.cursor/mcp.json`)
-
-**Basic configuration (recommended):**
-```json
-{
-  "mcpServers": {
-    "mcp-tasks": {
-      "command": "npx",
-      "args": ["-y", "mcp-tasks"]
-    }
-  }
-}
-```
-
 **Full configuration with custom environment:**
 ```json
 {
@@ -148,20 +134,6 @@ npx mcp-tasks add "Your new task text" "To Do" 0
         "TRANSPORT": "http",
         "PORT": "4680"
       }
-    }
-  }
-}
-```
-
-### Claude Desktop (`~/.config/claude_desktop_config.json`)
-
-**Basic setup:**
-```json
-{
-  "mcpServers": {
-    "mcp-tasks": {
-      "command": "npx",
-      "args": ["-y", "mcp-tasks"]
     }
   }
 }
