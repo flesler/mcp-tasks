@@ -13,7 +13,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && chmod +x dist/index.js",
+    "build": "npm run ts -- bin/bundle.ts",
+    "build:all": "npm run build:types && npm run build:bundle",
+    "build:bundle": "npm run ts -- bin/bundle.ts && echo 'Build succeeded'",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist --declarationMap false",
     "build:watch": "tsc --watch --incremental",
     "build:clean": "npx rimraf dist/* *.tsbuildinfo",
     "start": "dist/index.js",
@@ -26,8 +29,8 @@
     "eslint": "eslint --cache",
     "lint": "npm run eslint -- src/**/*.ts",
     "lint:fix": "npm run lint -- --fix",
-    "lint:full": "npm run build && npm run lint",
-    "prepack": "npm run lint:full && npm run build:clean && npm run build && npm run start:check",
+    "lint:full": "npm run build:all && npm run lint",
+    "prepack": "npm run lint:full && npm run build:clean && npm run build:all && npm run start:check",
     "publish:dry": "npm pack --dry-run",
     "publish:npm": "npm publish",
     "publish:docker": "bin/docker-publish.sh",
@@ -73,6 +76,7 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "esbuild": "^0.25.8",
     "eslint": "^8.57.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"

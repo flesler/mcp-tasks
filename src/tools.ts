@@ -80,7 +80,7 @@ const tools = {
       index: schemas.index,
     }),
     fromArgs: ([text, status = env.STATUS_TODO, index]) => ({ texts: [text], status, index: index ? Number(index) : undefined }),
-    description: 'Add new tasks with a specific status. It\'s faster and cheaper if you use this in batch, add all at once',
+    description: 'Add new tasks with a specific status. It\'s faster and cheaper if you use this in batch. User can add atomically while AI works using the CLI add tool',
     handler: (args, context) => {
       let meta = metadata.load(args.source_id)
       const { source, state } = meta
@@ -131,7 +131,7 @@ const tools = {
       index: schemas.index,
     }),
     fromArgs: ([taskIds, status]) => ({ ids: split(taskIds) || [], status }),
-    description: 'Update tasks in bulk by ID to a different status. Returns complete summary no need to call tasks_summary afterwards',
+    description: 'Update tasks in bulk by ID to a different status. Returns complete summary no need to call tasks_summary afterwards. Prevents AI accidentally rename or deleting tasks during mass updates, not even possible',
     handler: (args, context = {}) => {
       const meta = metadata.load(args.source_id)
       const texts = args.ids.map((id) => {
@@ -160,7 +160,7 @@ const tools = {
       source_id: schemas.sourceId,
     }),
     fromArgs: () => ({}),
-    description: 'Get per-status task counts and the WIP task(s). Redundant after tasks_add/tasks_update',
+    description: 'Get per-status task counts and the WIP task(s). Redundant right after tasks_add/tasks_update',
     isReadOnly: true,
     handler: (args) => {
       return getSummary(args.source_id)
@@ -179,7 +179,7 @@ const tools = {
     handler: (args, context) => {
       return {
         ...args, processEnv: process.env, argv: process.argv,
-        env, context, version: pkg.version, cwd: util.CWD,
+        env, context, version: pkg.version, CWD: util.CWD, ROOT: util.ROOT,
       }
     },
   }),

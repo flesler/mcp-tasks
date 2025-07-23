@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import cli from './cli.js'
 import pkg from './pkg.js'
 import server from './server.js'

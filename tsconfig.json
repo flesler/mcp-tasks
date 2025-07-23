@@ -11,12 +11,12 @@
     "outDir": "./dist",
     "declaration": true,
     "declarationDir": "./dist",
-    "sourceMap": true,
+    "sourceMap": false,
     "rootDir": "src",
     "useUnknownInCatchVariables": false,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "declarationMap": true
+    "declarationMap": false
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
