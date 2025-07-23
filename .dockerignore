@@ -1,19 +1,10 @@
-node_modules
-npm-debug.log
-.git
-.gitignore
-README.md
-.env
-.cursor
-bin/
-tmp/
-*.log
-.DS_Store
-coverage/
-.nyc_output/
-test/
-tests/
-spec/
-.eslintrc*
-.prettierrc*
-.editorconfig 
+# Include only what we need: package*.json and dist/index.js
+# Exclude everything else first, then include specific files
+
+# Exclude all
+*
+
+# Include only what we need
+!package.json
+!package-lock.json
+!dist/index.js 
