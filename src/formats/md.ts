@@ -49,7 +49,7 @@ const md: FormatParser = {
       content += `${PREFIX}${group}\n\n`
       for (const task of tasks) {
         const char = group === env.STATUS_DONE ? 'x' :
-          group === env.STATUS_NOTES ? '' : ' '
+          group === env.STATUS_NOTES || group === env.STATUS_REMINDERS ? '' : ' '
         const block = char ? `[${char}] ` : ''
         const escaped = task.replace(/\r?\n/g, '\\n')
         content += `- ${block}${escaped}\n`

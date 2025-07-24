@@ -126,16 +126,18 @@ npx mcp-tasks add "Your new task text" "To Do" 0
 ```
 
 **HTTP transport for remote access:**
+
+First run the server:
+```bash
+TRANSPORT=http PORT=4680 npx mcp-tasks
+```
+Then:
 ```json
 {
   "mcpServers": {
     "mcp-tasks": {
-      "command": "npx",
-      "args": ["-y", "mcp-tasks"],
-      "env": {
-        "TRANSPORT": "http",
-        "PORT": "4680"
-      }
+      "type": "streamableHttp",
+      "url": "http://localhost:4680/mcp"
     }
   }
 }
