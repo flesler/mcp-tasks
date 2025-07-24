@@ -8,7 +8,7 @@ const PREFIX = '## '
 const LINE_REGEX: RegExp = /^ *- *(?:\[.?\])? *(.+) *$/
 
 // TODO: Make this configurable (?)
-const SKIP_IF_EMPTY: string[] = [env.STATUS_DELETED, env.STATUS_NOTES]
+const SKIP_IF_EMPTY: string[] = _.compact([env.STATUS_DELETED, env.STATUS_NOTES, env.STATUS_REMINDERS])
 
 const md: FormatParser = {
   read(path) {

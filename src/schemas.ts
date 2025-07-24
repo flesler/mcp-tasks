@@ -22,6 +22,7 @@ export default {
     You might need to infer it from the context:
     - "${env.STATUS_TODO}" for tasks coming up next (e.g. "Do X next")
     - "${env.STATUS_WIP}" for what you\'ll do now (e.g. "First do X")
+    ${env.STATUS_REMINDERS ? `- "${env.STATUS_REMINDERS}" instructions for you (the AI) to be constantly reminded of` : ''}
     ${env.STATUS_NOTES ? `- "${env.STATUS_NOTES}" to collect non-actionable notes` : ''}
   `)),
 

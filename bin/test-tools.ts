@@ -9,6 +9,8 @@ import util from '../src/util.js'
 
 // Disable AUTO_WIP for consistent test expectations
 env.AUTO_WIP = false
+env.STATUS_REMINDERS = 'Reminders'
+env.STATUS_NOTES = 'Notes'
 
 // Track test failures for proper exit codes
 let hasFailures = false
@@ -22,9 +24,8 @@ function log(message: string) {
 
 function logError(message: string) {
   hasFailures = true
-  if (!process.env.SILENT) {
-    console.error('❌ Error: ' + message)
-  }
+  console.error('❌ Error: ' + message)
+  process.exit(1)
 }
 
 // Global error handlers to ensure exit code 1 on any failure
@@ -43,12 +44,14 @@ log('🧪 Testing tools...')
 const BACKLOG = 'Backlog'
 
 // Helper function to create expected count objects
-function createExpected(todo: number, done: number, backlog: number = 0, inProgress: number = 0): any {
+function createExpected(todo: number, done: number, backlog: number = 0, inProgress: number = 0, notes: number = 0, reminders: number = 0): any {
   const expected: any = {}
   expected[BACKLOG] = backlog
   expected[env.STATUS_TODO] = todo
   expected[env.STATUS_DONE] = done
   expected[env.STATUS_WIP] = inProgress
+  expected[env.STATUS_NOTES] = notes
+  expected[env.STATUS_REMINDERS] = reminders
   return expected
 }
 
@@ -272,6 +275,136 @@ storage.supportedExtensions().forEach((ext, i) => {
 
   log(`✅ ${format} format test completed successfully!\n`)
 })
+
+// Test Notes and Reminders functionality
+log('\n📝 === NOTES AND REMINDERS TESTS ===')
+
+// Test 1: Test Notes functionality
+log('\n📝 Testing Notes functionality...')
+const notesTestPath = path.join(process.cwd(), 'tmp/test/notes-test.md')
+const notesSourceId = setupFile(notesTestPath)
+
+// Add notes
+runTool('add', {
+  source_id: notesSourceId,
+  texts: ['Research new tech stack', 'Team meeting notes from Monday'],
+  status: env.STATUS_NOTES,
+})
+assertCounts(notesSourceId, createExpected(0, 0, 0, 0, 2, 0), 'After adding Notes')
+
+// Verify Notes appear in summary
+const notesSummary = JSON.parse(runTool('summary', { source_id: notesSourceId }))
+assert(notesSummary[env.STATUS_NOTES] === 2, 'Notes should show count of 2')
+
+log('✅ Notes functionality working correctly!')
+
+// Test 2: Test Reminders functionality
+log('\n🔔 Testing Reminders functionality...')
+const remindersTestPath = path.join(process.cwd(), 'tmp/test/reminders-test.md')
+const remindersSourceId = setupFile(remindersTestPath)
+
+// Add reminders
+runTool('add', {
+  source_id: remindersSourceId,
+  texts: ['Review quarterly goals', 'Schedule performance reviews'],
+  status: env.STATUS_REMINDERS,
+})
+assertCounts(remindersSourceId, createExpected(0, 0, 0, 0, 0, 2), 'After adding Reminders')
+
+// Verify Reminders appear in summary with reminders array
+const remindersSummary = JSON.parse(runTool('summary', { source_id: remindersSourceId }))
+assert(remindersSummary[env.STATUS_REMINDERS] === 2, 'Reminders should show count of 2')
+assert(Array.isArray(remindersSummary.reminders), 'Summary should include reminders array')
+assert(remindersSummary.reminders.length === 2, 'Reminders array should have 2 items')
+assert(remindersSummary.reminders[0].text === 'Review quarterly goals', 'First reminder text should match')
+
+log('✅ Reminders functionality working correctly!')
+
+// Test 3: Test mixed Notes and Reminders
+log('\n📝🔔 Testing mixed Notes and Reminders...')
+const mixedTestPath = path.join(process.cwd(), 'tmp/test/mixed-test.md')
+const mixedSourceId = setupFile(mixedTestPath)
+
+// Add tasks to all statuses including Notes and Reminders
+runTool('add', {
+  source_id: mixedSourceId,
+  texts: ['Regular task'],
+  status: env.STATUS_TODO,
+})
+runTool('add', {
+  source_id: mixedSourceId,
+  texts: ['Important note'],
+  status: env.STATUS_NOTES,
+})
+runTool('add', {
+  source_id: mixedSourceId,
+  texts: ['Important reminder'],
+  status: env.STATUS_REMINDERS,
+})
+assertCounts(mixedSourceId, createExpected(1, 0, 0, 0, 1, 1), 'After adding mixed tasks')
+
+// Verify mixed summary
+const mixedSummary = JSON.parse(runTool('summary', { source_id: mixedSourceId }))
+assert(mixedSummary[env.STATUS_TODO] === 1, 'Should have 1 todo')
+assert(mixedSummary[env.STATUS_NOTES] === 1, 'Should have 1 note')
+assert(mixedSummary[env.STATUS_REMINDERS] === 1, 'Should have 1 reminder')
+assert(Array.isArray(mixedSummary.reminders), 'Should include reminders array')
+assert(mixedSummary.reminders.length === 1, 'Should have 1 reminder in array')
+
+log('✅ Mixed Notes and Reminders working correctly!')
+
+// Test 4: Test search functionality with Notes and Reminders
+log('\n🔍 Testing search with Notes and Reminders...')
+const allMixedTasks = runTool('search', { source_id: mixedSourceId })
+const groupedMixed = groupResults(allMixedTasks)
+assert(groupedMixed[env.STATUS_NOTES]?.length === 1, 'Search should find Notes')
+assert(groupedMixed[env.STATUS_REMINDERS]?.length === 1, 'Search should find Reminders')
+
+// Test filtering by status
+const notesOnly = runTool('search', { source_id: mixedSourceId, statuses: [env.STATUS_NOTES] })
+assert(notesOnly.length === 1, 'Should find only Notes when filtering')
+assert(notesOnly[0].status === env.STATUS_NOTES, 'Found task should be a Note')
+
+const remindersOnly = runTool('search', { source_id: mixedSourceId, statuses: [env.STATUS_REMINDERS] })
+assert(remindersOnly.length === 1, 'Should find only Reminders when filtering')
+assert(remindersOnly[0].status === env.STATUS_REMINDERS, 'Found task should be a Reminder')
+
+log('✅ Search with Notes and Reminders working correctly!')
+
+// Test 5: Test markdown format with Notes and Reminders
+log('\n📄 Testing markdown format with Notes and Reminders...')
+const mdNotesRemindersPath = path.join(process.cwd(), 'tmp/test/md-notes-reminders.md')
+const mdNotesRemindersId = setupFile(mdNotesRemindersPath)
+
+// Add content and verify file format
+runTool('add', {
+  source_id: mdNotesRemindersId,
+  texts: ['Task to complete'],
+  status: env.STATUS_TODO,
+})
+runTool('add', {
+  source_id: mdNotesRemindersId,
+  texts: ['Research findings'],
+  status: env.STATUS_NOTES,
+})
+runTool('add', {
+  source_id: mdNotesRemindersId,
+  texts: ['Follow up next week'],
+  status: env.STATUS_REMINDERS,
+})
+
+// Read the markdown file and verify format
+const mdContent = util.readFile(mdNotesRemindersPath)
+assert(mdContent.includes('## To Do'), 'Should have To Do section')
+assert(mdContent.includes('## Notes'), 'Should have Notes section')
+assert(mdContent.includes('## Reminders'), 'Should have Reminders section')
+assert(mdContent.includes('- [ ] Task to complete'), 'Should have todo task')
+assert(mdContent.includes('- Research findings'), 'Should have note (no checkbox)')
+assert(mdContent.includes('- [ ] Follow up next week'), 'Should have reminder with checkbox')
+
+log('✅ Markdown format with Notes and Reminders working correctly!')
+
+log('\n✅ All Notes and Reminders tests passed!')
 
 // Test markdown parser defaults unrecognized sections to To Do
 log('\n📝 === MARKDOWN PARSER SPECIFIC TEST ===')
@@ -530,6 +663,12 @@ function assertCounts(sourceId: string, expected: any, label: string) {
   assert(summary[env.STATUS_DONE] === expected[env.STATUS_DONE], `${label}: ${env.STATUS_DONE} count should be ${expected[env.STATUS_DONE]}, got ${summary[env.STATUS_DONE]}`)
   assert(summary[BACKLOG] === expected[BACKLOG], `${label}: Backlog count should be ${expected[BACKLOG]}, got ${summary[BACKLOG]}`)
   assert(summary[env.STATUS_WIP] === expected[env.STATUS_WIP], `${label}: ${env.STATUS_WIP} count should be ${expected[env.STATUS_WIP]}, got ${summary[env.STATUS_WIP]}`)
+  if (env.STATUS_NOTES && expected[env.STATUS_NOTES] !== undefined) {
+    assert(summary[env.STATUS_NOTES] === expected[env.STATUS_NOTES], `${label}: ${env.STATUS_NOTES} count should be ${expected[env.STATUS_NOTES]}, got ${summary[env.STATUS_NOTES]}`)
+  }
+  if (env.STATUS_REMINDERS && expected[env.STATUS_REMINDERS] !== undefined) {
+    assert(summary[env.STATUS_REMINDERS] === expected[env.STATUS_REMINDERS], `${label}: ${env.STATUS_REMINDERS} count should be ${expected[env.STATUS_REMINDERS]}, got ${summary[env.STATUS_REMINDERS]}`)
+  }
 }
 
 // Exit with proper code based on test results

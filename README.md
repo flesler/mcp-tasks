@@ -41,6 +41,7 @@ An efficient task manager. Designed to minimize tool confusion and maximize LLM 
 - 🚫 **Duplicate prevention**: Automatically prevents duplicate tasks
 - 🛡️ **Type-safe**: Full TypeScript support with Zod validation
 - 🔒 **Ultra-safe**: AI has no way to rewrite or delete your tasks (unless you enable it), only add and move them
+- 📅 **Optional reminders**: Enable a dedicated Reminders section the AI constantly sees and can maintain
 
 ## 🚀 **Quick Start**
 
@@ -109,8 +110,9 @@ npx mcp-tasks add "Your new task text" "To Do" 0
         "STATUS_WIP": "In Progress",
         "STATUS_TODO": "To Do",
         "STATUS_DONE": "Done",
+        "STATUS_REMINDERS": "Reminders",
         "STATUS_NOTES": "Notes",
-        "STATUSES": "In Progress,To Do,Done,Backlog",
+        "STATUSES": "In Progress,To Do,Done,Backlog,Reminders,Notes",
         "AUTO_WIP": "true",
         "PREFIX_TOOLS": "true",
         "KEEP_DELETED": "true",
@@ -231,7 +233,8 @@ tasks_summary({
 | `STATUS_WIP` | `In Progress` | Work-in-progress status name |
 | `STATUS_TODO` | `To Do` | ToDo status name |
 | `STATUS_DONE` | `Done` | Completed status name |
-| `STATUS_NOTES` | `Notes` | Optional notes/non-actionable status name |
+| `STATUS_REMINDERS` | `Reminders` | Reminders for the AI (empty string to disable) |
+| `STATUS_NOTES` | `Notes` | Notes/non-actionable tasks (empty string to disable) |
 | `STATUSES` | `Backlog` | Comma-separated additional statuses |
 | `AUTO_WIP` | `true` | One WIP moves rest to To Do, first To Do to WIP when no WIP's |
 | `KEEP_DELETED` | `true` | Retain deleted tasks (AI can't lose you tasks!) |
@@ -275,6 +278,13 @@ Optional, the WIP/ToDo/Done statuses can be included to control their order.
 ## Done
 - [x] Set up project structure
 - [x] Initialize repository
+
+## Reminders
+- [ ] Don't move to Done until you verified it works
+- [ ] After you move to Done, commit all the changes, use the task name as the commit message
+
+## Notes
+- [ ] The task tools were really great to use!
 ```
 
 ### JSON (`.json`) - Structured Data
@@ -295,6 +305,13 @@ Optional, the WIP/ToDo/Done statuses can be included to control their order.
     "Done": [
       "Set up project structure",
       "Initialize repository"
+    ],
+    "Reminders": [
+      "Don't move to Done until you verified it works",
+      "After you move to Done, commit all the changes, use the task name as the commit message"
+    ],
+    "Notes": [
+      "The task tools were really great to use!"
     ]
   }
 }
@@ -314,6 +331,9 @@ groups:
   Done:
     - Set up project structure
     - Initialize repository
+  Reminders:
+    - Don't move to Done until you verified it works
+    - After you move to Done, commit all the changes, use the task name as the commit message
 ```
 
 ## 🖥️ **Server Usage**
@@ -357,6 +377,9 @@ mcp-tasks update m3Qw,p9Lx Done
 
 # Get summary
 mcp-tasks summary
+
+# Add a reminder (feature must be enabled with REMINDERS=true)
+mcp-tasks add "Don't move to Done until you verified it works" Reminders
 ```
 
 **CLI Features:**

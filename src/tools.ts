@@ -46,7 +46,7 @@ const tools = {
       statuses: z.array(schemas.status).optional().describe('Specific statuses to get. Gets all if omitted'),
       terms: z.array(z.string()).optional().describe('Search terms to filter tasks by text or status (case-insensitive, OR logic, no regex or wildcards)'),
       ids: schemas.ids.optional().describe('Optional list of task IDs to search for'),
-      limit: z.number().int().min(1).optional().describe('Maximum number of results (only for large task lists)'),
+      limit: z.number().int().min(1).optional().describe('Maximum number of results (only for really large task lists)'),
     }),
     fromArgs: ([statuses = '', terms = '']) => ({ statuses: split(statuses), terms: split(terms) }),
     description: 'Search tasks from specific statuses with optional text & ID filtering',
@@ -95,7 +95,7 @@ const tools = {
       // Special handling for Deleted and other unknown statuses
       if (!group) {
         storage.save(source.path, state)
-        return getSummary(source.id, { tasks: [] })
+        return getSummary(source.id)
       }
       const wip = state.groups[env.STATUS_WIP]
       const todos = state.groups[env.STATUS_TODO]
@@ -108,14 +108,16 @@ const tools = {
       // Add new tasks at the specified index
       const index = util.clamp(args.index ?? group.length, 0, group.length)
       group.splice(index, 0, ...texts)
-      if (env.AUTO_WIP && !wip.length && todos[0] && (todos[0] !== texts[0] || !context?.update)) {
+      const isUpdate = !!context?.update
+      if (env.AUTO_WIP && !wip.length && todos[0] && (todos[0] !== texts[0] || isUpdate)) {
         // Move first ToDo to WIP (but not for updates)
         wip.push(todos.shift()!)
       }
       storage.save(source.path, state)
       // Re-load metadata after state changes
       meta = metadata.load(source.id)
-      return getSummary(source.id, { tasks: _.compact(texts.map(t => meta.tasksByIdOrText[t])) })
+      const affected = _.compact(texts.map(t => meta.tasksByIdOrText[t]))
+      return getSummary(source.id, { [isUpdate ? 'updated' : 'added']: affected })
     },
   }),
 
@@ -192,11 +194,10 @@ function getSummary(sourceId?: string, extra?: object) {
   const wip = _.camelCase(env.STATUS_WIP)
   return JSON.stringify({
     source: _.omit(meta.source, ['workspace']),
-    ...counts,
-    total,
+    ...counts, total, ...extra,
     instructions: env.INSTRUCTIONS || undefined,
+    reminders: env.STATUS_REMINDERS ? meta.groups[env.STATUS_REMINDERS] : undefined,
     [wip]: meta.groups[env.STATUS_WIP],
-    ...extra,
   })
 }
 

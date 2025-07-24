@@ -7,6 +7,7 @@ const env = {
   STATUS_WIP: readString('STATUS_WIP', 'In Progress'),
   STATUS_TODO: readString('STATUS_TODO', 'To Do'),
   STATUS_DONE: readString('STATUS_DONE', 'Done'),
+  STATUS_REMINDERS: readString('STATUS_REMINDERS', 'Reminders'),
   STATUS_NOTES: readString('STATUS_NOTES', 'Notes'),
   // Not configurable
   STATUS_DELETED: 'Deleted',
@@ -28,6 +29,9 @@ if (!STATUSES.includes(env.STATUS_WIP)) {
 }
 if (!STATUSES.includes(env.STATUS_DONE)) {
   STATUSES.push(env.STATUS_DONE)
+}
+if (env.STATUS_REMINDERS && !STATUSES.includes(env.STATUS_REMINDERS)) {
+  STATUSES.push(env.STATUS_REMINDERS)
 }
 if (env.STATUS_NOTES && !STATUSES.includes(env.STATUS_NOTES)) {
   STATUSES.push(env.STATUS_NOTES)
