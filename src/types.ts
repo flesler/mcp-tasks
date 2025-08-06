@@ -1,3 +1,5 @@
+import z, { ZodSchema } from 'zod'
+
 export interface SourceRaw {
   path: string
   workspace: string
@@ -30,4 +32,13 @@ export interface Metadata {
   tasks: Task[]
   tasksByIdOrText: Record<string, Task>
   statuses: string[]
+}
+
+export interface Tool<S extends ZodSchema = ZodSchema> {
+  schema: S
+  description: string
+  isResource: boolean
+  isReadOnly: boolean
+  handler: (args: z.infer<S>, context?: any) => any
+  fromArgs: (args: string[]) => z.infer<S>
 }

@@ -12,7 +12,7 @@ export default {
     del({
       targets: ['dist/**/*.d.ts', 'dist/*/', '!dist/index.d.ts'],
       hook: 'writeBundle',
-      verbose: true
+      verbose: false
     })
   ]
 }

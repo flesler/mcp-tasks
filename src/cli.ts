@@ -1,5 +1,6 @@
 import { ZodError } from 'zod'
-import tools, { Tool } from './tools.js'
+import tools from './tools.js'
+import type { Tool } from './types.js'
 
 type Tools = typeof tools
 type ToolName = keyof Tools

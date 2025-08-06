@@ -38,6 +38,6 @@ Examples:
 
 // Library exports - available for programmatic usage
 export { default as cli } from './cli.js'
-export type * from './tools.js'
 export { default as tools } from './tools.js'
+export type { FormatParser, Metadata, State, Task, Tool } from './types.js'
 

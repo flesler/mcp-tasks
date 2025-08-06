@@ -6,16 +6,8 @@ import pkg from './pkg.js'
 import schemas from './schemas.js'
 import sources from './sources.js'
 import storage from './storage.js'
+import { Tool } from './types.js'
 import util from './util.js'
-
-interface Tool<S extends ZodSchema = ZodSchema> {
-  schema: S
-  description: string
-  isResource: boolean
-  isReadOnly: boolean
-  handler: (args: z.infer<S>, context?: any) => any
-  fromArgs: (args: string[]) => z.infer<S>
-}
 
 const tools = {
   setup: defineTool('setup', {
@@ -225,4 +217,3 @@ function split(str: string): string[] | undefined {
 }
 
 export default tools
-export type { Tool }
