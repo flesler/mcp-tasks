@@ -4,6 +4,7 @@
   "type": "module",
   "description": "An efficient task manager. Designed to minimize tool confusion and maximize LLM budget efficiency while providing powerful search, filtering, and organization capabilities across multiple file formats (Markdown, JSON, YAML)",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "mcp-tasks": "dist/index.js"
   },
@@ -13,12 +14,14 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "npm run ts -- bin/bundle.ts",
-    "build:all": "npm run build:types && npm run build:bundle",
-    "build:bundle": "npm run ts -- bin/bundle.ts && echo 'Build succeeded'",
+    "build": "npm run build:code",
+    "build:code": "npm run ts -- bin/bundle.ts && echo 'Build succeeded'",
     "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist --declarationMap false",
+    "build:check": "tsc --noEmit",
     "build:watch": "tsc --watch --incremental",
     "build:clean": "npx rimraf dist/* *.tsbuildinfo",
+    "bundle:types": "rollup --config rollup.config.dts.js",
+    "bundle:all": "npm run build:types && npm run build:code && npm run bundle:types",
     "start": "dist/index.js",
     "start:check": "dist/index.js --check",
     "start:http": "TRANSPORT=http dist/index.js",
@@ -30,9 +33,10 @@
     "eslint": "eslint --cache",
     "lint": "npm run eslint -- src/**/*.ts",
     "lint:fix": "npm run lint -- --fix",
-    "lint:full": "npm run build:all && npm run lint",
+    "lint:full": "npm run build:check && npm run lint",
     "test": "npm run ts -- bin/test-tools.ts",
-    "prepack": "npm run lint:full && SILENT=true npm test && npm run build:clean && npm run build:all && npm run start:check",
+    "test:full": "npm run build:clean && npm run lint:full && SILENT=true npm test && npm run bundle:all && npm run start:check",
+    "prepack": "npm run test:full",
     "publish:dry": "npm pack --dry-run",
     "publish:npm": "npm publish",
     "publish:docker": "bin/docker-publish.sh",
@@ -80,6 +84,9 @@
     "@typescript-eslint/parser": "^7.0.0",
     "esbuild": "^0.25.8",
     "eslint": "^8.57.0",
+    "rollup": "^4.46.2",
+    "rollup-plugin-delete": "^3.0.1",
+    "rollup-plugin-dts": "^6.2.1",
     "tsx": "^4.20.3",
     "types-package-json": "^2.0.39",
     "typescript": "^5.8.3"

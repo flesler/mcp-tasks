@@ -400,7 +400,7 @@ assert(mdContent.includes('## Notes'), 'Should have Notes section')
 assert(mdContent.includes('## Reminders'), 'Should have Reminders section')
 assert(mdContent.includes('- [ ] Task to complete'), 'Should have todo task')
 assert(mdContent.includes('- Research findings'), 'Should have note (no checkbox)')
-assert(mdContent.includes('- [ ] Follow up next week'), 'Should have reminder with checkbox')
+assert(mdContent.includes('- Follow up next week'), 'Should have reminder without checkbox')
 
 log('✅ Markdown format with Notes and Reminders working correctly!')
 
