@@ -1,4 +1,5 @@
-import z, { ZodSchema } from 'zod'
+import type { ZodSchema } from 'zod'
+import type z from 'zod'
 
 export interface SourceRaw {
   path: string

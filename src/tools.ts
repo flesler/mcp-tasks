@@ -1,12 +1,13 @@
 import _ from 'lodash'
-import { z, ZodSchema } from 'zod'
+import type { ZodSchema } from 'zod'
+import { z } from 'zod'
 import env from './env.js'
 import metadata from './metadata.js'
 import pkg from './pkg.js'
 import schemas from './schemas.js'
 import sources from './sources.js'
 import storage from './storage.js'
-import { Tool } from './types.js'
+import type { Tool } from './types.js'
 import util from './util.js'
 
 const tools = {

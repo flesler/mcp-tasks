@@ -2,7 +2,7 @@ import env from './env.js'
 import json from './formats/json.js'
 import md from './formats/md.js'
 import yml from './formats/yml.js'
-import { FormatParser, State } from './types.js'
+import type { FormatParser, State } from './types.js'
 import util from './util.js'
 
 const PARSERS: Record<string, FormatParser> = {

@@ -1,6 +1,6 @@
 import sources from './sources.js'
 import storage from './storage.js'
-import { Metadata, Task } from './types.js'
+import type { Metadata, Task } from './types.js'
 import util from './util.js'
 
 const metadata = {

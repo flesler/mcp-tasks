@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { isAbsolute } from 'path'
 import env from './env.js'
-import { Source, SourceRaw } from './types.js'
+import type { Source, SourceRaw } from './types.js'
 import util from './util.js'
 
 const SOURCES_PATH = util.resolve(env.SOURCES_PATH, util.REPO)

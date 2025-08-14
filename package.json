@@ -29,7 +29,7 @@
     "inspect": "npx fastmcp inspect src/index.ts",
     "ts": "tsx",
     "eslint": "eslint --cache",
-    "lint": "npm run eslint -- src/**/*.ts",
+    "lint": "npm run eslint -- 'src/**/*.ts'",
     "lint:fix": "npm run lint -- --fix",
     "lint:full": "npm run build:check && npm run lint",
     "test": "npm run ts -- bin/test-tools.ts",

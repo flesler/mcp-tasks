@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { basename } from 'path'
 import env from '../env.js'
-import { FormatParser, State } from '../types.js'
+import type { FormatParser, State } from '../types.js'
 import util from '../util.js'
 
 const PREFIX = '## '

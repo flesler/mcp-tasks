@@ -1,5 +1,5 @@
 import * as YAML from 'yaml'
-import { FormatParser } from '../types.js'
+import type { FormatParser } from '../types.js'
 import util from '../util.js'
 
 const yml: FormatParser = {
