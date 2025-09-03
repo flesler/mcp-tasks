@@ -30,6 +30,7 @@
     "array-bracket-spacing": ["error", "never"],
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/consistent-type-imports": "error",
+    "no-multiple-empty-lines":["error", { "max": 1, "maxEOF": 1, "maxBOF": 0 }],
     "no-console": "off"
   }
 } 

@@ -3,16 +3,16 @@ import { defineConfig } from 'tsup'
 export default defineConfig((options) => {
   // Conditional config: fast build (--no-dts) vs full build
   const dts = options.dts !== false
+  const now = Date.now()
   return {
     entry: ['src/index.ts'],
     format: ['esm'],
     platform: 'node',
     target: 'node20',
     outDir: 'dist',
-    clean: true,
-    minify: true,
+    minify: dts,
     dts,
-    treeshake: true,
+    treeshake: dts,
     silent: !dts,
     esbuildOptions(options) {
       options.banner = {
@@ -32,7 +32,7 @@ export default defineConfig((options) => {
       )
       fs.writeFileSync(outputPath, content, 'utf-8')
       if (!dts) {
-        console.log('Build success')
+        console.log(`Build success in ${Date.now() - now}ms`)
       }
     },
   }
