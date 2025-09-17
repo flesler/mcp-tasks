@@ -1,3 +1,4 @@
+import fs from 'fs'
 import { defineConfig } from 'tsup'
 
 export default defineConfig((options) => {
@@ -10,10 +11,12 @@ export default defineConfig((options) => {
     platform: 'node',
     target: 'node20',
     outDir: 'dist',
-    minify: dts,
     dts,
+    clean: dts,
     treeshake: dts,
+    minify: dts,
     silent: !dts,
+    skipNodeModulesBundle: true,
     esbuildOptions(options) {
       options.banner = {
         js: '#!/usr/bin/env node',
@@ -23,7 +26,6 @@ export default defineConfig((options) => {
     },
     async onSuccess() {
       // Fix deprecated import assertion syntax in built output
-      const fs = await import('fs')
       const outputPath = 'dist/index.js'
       let content = fs.readFileSync(outputPath, 'utf-8')
       content = content.replace(
